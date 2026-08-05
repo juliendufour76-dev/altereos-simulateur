@@ -1,0 +1,896 @@
+/*!
+ * Simulateur DOETH — AlterEos
+ * Aligné sur la maquette « Calculateur OETH » : fond clair, cartes largement
+ * arrondies, ombres diffuses, orange réservé à l'action.
+ * Tout est scopé sous .aeds pour cohabiter avec le thème WordPress.
+ */
+
+.aeds {
+  /* Action — l'orange ne sert qu'à ça */
+  --ae-orange: #ef7c00;
+  --ae-orange-clair: #f5a623;
+  --ae-orange-fonce: #b85c00;      /* 4,6:1 sur blanc, pour le texte */
+  --ae-orange-voile: #fff4e6;
+
+  /* Valeur transformée — le vert du logo */
+  --ae-vert: #7dac16;
+  --ae-vert-fonce: #4e6d0c;        /* 5,4:1 sur blanc */
+  --ae-vert-voile: #f1f7e3;
+  --ae-vert-trait: #cfe0a4;
+
+  /* Neutres */
+  --ae-encre: #1f2a30;
+  --ae-encre-douce: #38474f;
+  --ae-gris: #5b6b75;              /* 5,5:1 sur blanc */
+  --ae-gris-clair: #8a99a2;
+  --ae-ardoise: #7e96a3;           /* masse « reste dû » */
+  --ae-ardoise-voile: #eef3f6;
+  --ae-bande: #f1f5f8;             /* bande pâle de la maquette */
+  --ae-papier: #fafbfc;
+  --ae-blanc: #ffffff;
+  --ae-trait: #e3e9ed;
+  --ae-trait-fort: #c3ced5;
+
+  /* Rythme */
+  --ae-r1: 0.25rem;
+  --ae-r2: 0.5rem;
+  --ae-r3: 0.75rem;
+  --ae-r4: 1rem;
+  --ae-r5: 1.5rem;
+  --ae-r6: 2rem;
+  --ae-r7: 3rem;
+  --ae-r8: 4.5rem;
+
+  --ae-rayon: 20px;
+  --ae-rayon-md: 14px;
+  --ae-rayon-sm: 10px;
+  --ae-pilule: 999px;
+
+  --ae-ombre-douce: 0 2px 6px rgba(31, 42, 48, 0.04), 0 18px 40px -24px rgba(31, 42, 48, 0.22);
+  --ae-ombre-carte: 0 2px 8px rgba(31, 42, 48, 0.05), 0 28px 60px -32px rgba(31, 42, 48, 0.35);
+  --ae-ombre-action: 0 6px 18px -6px rgba(239, 124, 0, 0.55);
+
+  --ae-transition: 200ms cubic-bezier(0.2, 0.8, 0.25, 1);
+  --ae-transition-masse: 560ms cubic-bezier(0.22, 0.85, 0.2, 1);
+
+  --ae-titres: Poppins, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --ae-texte: Lato, "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  font-family: var(--ae-texte);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ae-encre);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.aeds *,
+.aeds *::before,
+.aeds *::after { box-sizing: border-box; }
+
+/* La remise à zéro passe par :where() : elle n'apporte aucune spécificité et
+   ne peut donc pas écraser les marges des composants définis plus bas. */
+.aeds :where(h1, h2, h3, h4) {
+  margin: 0;
+  font-family: var(--ae-titres);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.aeds :where(p, ul, ol, figure) { margin: 0; }
+.aeds :where(ul, ol) { padding: 0; list-style: none; }
+.aeds :where(button) { font: inherit; color: inherit; }
+
+.aeds__cache {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.aeds :focus-visible {
+  outline: 3px solid var(--ae-orange);
+  outline-offset: 2px;
+  border-radius: var(--ae-r1);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Coquille
+ * ------------------------------------------------------------------ */
+
+.aeds__section {
+  padding: clamp(2rem, 1rem + 4vw, 4.5rem) clamp(1rem, 0.5rem + 2.5vw, 3rem);
+  background: var(--ae-bande);
+  border-radius: var(--ae-rayon);
+}
+
+.aeds__contenu {
+  max-width: 78rem;
+  margin: 0 auto;
+}
+
+.aeds__ouverture {
+  max-width: 60ch;
+  margin-bottom: clamp(1.75rem, 1rem + 2vw, 2.75rem);
+}
+
+.aeds__titre {
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+  text-wrap: balance;
+}
+
+.aeds__chapo {
+  margin-top: var(--ae-r4);
+  font-size: 1.0625rem;
+  color: var(--ae-gris);
+  max-width: 64ch;
+  text-wrap: pretty;
+}
+
+.aeds__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ae-r2) var(--ae-r5);
+  margin-top: var(--ae-r5);
+  font-size: 0.875rem;
+  color: var(--ae-gris);
+}
+.aeds__meta li { display: flex; align-items: center; gap: 0.45rem; }
+.aeds__meta svg { flex: none; color: var(--ae-vert-fonce); }
+
+/* ------------------------------------------------------------------ *
+ *  Grille principale
+ * ------------------------------------------------------------------ */
+
+.aeds__atelier {
+  display: grid;
+  gap: var(--ae-r5);
+  align-items: start;
+}
+
+@media (min-width: 64rem) {
+  .aeds__atelier {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr);
+    gap: var(--ae-r6);
+  }
+  .aeds__resultat { position: sticky; top: var(--ae-r5); }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Formulaire
+ * ------------------------------------------------------------------ */
+
+.aeds__form { display: grid; gap: var(--ae-r4); }
+
+.aeds__bloc {
+  border: 0;
+  border-radius: var(--ae-rayon-md);
+  background: var(--ae-blanc);
+  box-shadow: var(--ae-ombre-douce);
+  padding: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  min-width: 0;
+}
+
+.aeds__legende {
+  display: block;
+  float: left; /* évite l'espacement natif de <legend> */
+  width: 100%;
+  padding: 0;
+  margin-bottom: var(--ae-r1);
+  font-family: var(--ae-titres);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.aeds__legende-note {
+  display: block;
+  clear: both;
+  margin-bottom: var(--ae-r4);
+  font-family: var(--ae-texte);
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--ae-gris);
+}
+
+.aeds__champs { display: grid; gap: var(--ae-r4); clear: both; }
+
+@media (min-width: 32rem) {
+  .aeds__champs--duo { grid-template-columns: 1fr 1fr; }
+}
+
+.aeds__champ { display: grid; gap: var(--ae-r1); min-width: 0; align-content: start; }
+
+.aeds__label { font-weight: 700; font-size: 0.9375rem; }
+
+.aeds__aide {
+  font-size: 0.8125rem;
+  color: var(--ae-gris);
+  line-height: 1.45;
+}
+
+.aeds__saisie {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--ae-trait-fort);
+  border-radius: var(--ae-rayon-sm);
+  background: var(--ae-blanc);
+  transition: border-color var(--ae-transition), box-shadow var(--ae-transition);
+}
+.aeds__saisie:focus-within {
+  border-color: var(--ae-orange);
+  box-shadow: 0 0 0 3px var(--ae-orange-voile);
+}
+.aeds__saisie--erreur { border-color: #a4361a; }
+.aeds__saisie--erreur:focus-within { box-shadow: 0 0 0 3px #fbe9e4; }
+
+.aeds__saisie input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+  min-height: 2.75rem;
+}
+.aeds__saisie input:focus { outline: none; }
+
+.aeds__unite {
+  flex: none;
+  padding-right: 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ae-gris);
+}
+
+.aeds__erreur {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #93301a;
+}
+.aeds__erreur svg { flex: none; }
+
+/* Sélecteur d'année */
+
+.aeds__segments {
+  display: inline-flex;
+  padding: 4px;
+  gap: 4px;
+  border-radius: var(--ae-pilule);
+  background: var(--ae-ardoise-voile);
+}
+.aeds__segment { position: relative; }
+.aeds__segment input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+}
+.aeds__segment span {
+  display: block;
+  padding: 0.65rem 1.1rem;
+  border-radius: var(--ae-pilule);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ae-gris);
+  white-space: nowrap;
+  transition: background var(--ae-transition), color var(--ae-transition);
+}
+.aeds__segment input:checked + span {
+  background: var(--ae-blanc);
+  color: var(--ae-encre);
+  box-shadow: 0 1px 3px rgba(31, 42, 48, 0.16);
+}
+.aeds__segment input:focus-visible + span {
+  outline: 3px solid var(--ae-orange);
+  outline-offset: 2px;
+}
+.aeds__segment:hover input:not(:checked) + span { color: var(--ae-encre); }
+
+/* Cases à cocher */
+
+.aeds__coches { display: grid; gap: var(--ae-r3); }
+
+.aeds__coche {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.7rem;
+  align-items: start;
+  padding: 0.75rem 0.85rem;
+  border: 1.5px solid var(--ae-trait);
+  border-radius: var(--ae-rayon-sm);
+  cursor: pointer;
+  transition: border-color var(--ae-transition), background var(--ae-transition);
+}
+.aeds__coche:hover { border-color: var(--ae-trait-fort); background: var(--ae-papier); }
+.aeds__coche:has(input:checked) {
+  border-color: var(--ae-vert);
+  background: var(--ae-vert-voile);
+}
+.aeds__coche input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.2rem 0 0;
+  accent-color: var(--ae-vert-fonce);
+  flex: none;
+}
+.aeds__coche b { display: block; font-size: 0.9375rem; }
+.aeds__coche small { display: block; font-size: 0.8125rem; color: var(--ae-gris); }
+
+/* Volet repliable */
+
+.aeds__volet {
+  border-radius: var(--ae-rayon-md);
+  background: var(--ae-blanc);
+  box-shadow: var(--ae-ombre-douce);
+  overflow: hidden;
+}
+.aeds__volet > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--ae-r3);
+  padding: var(--ae-r4) clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  font-family: var(--ae-titres);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  min-height: 3.25rem;
+}
+.aeds__volet > summary::-webkit-details-marker { display: none; }
+.aeds__volet > summary:hover { background: var(--ae-papier); }
+.aeds__volet > summary small {
+  font-family: var(--ae-texte);
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--ae-gris);
+}
+.aeds__volet-fleche {
+  flex: none;
+  margin-left: auto;
+  color: var(--ae-orange);
+  transition: transform var(--ae-transition);
+}
+.aeds__volet[open] .aeds__volet-fleche { transform: rotate(180deg); }
+.aeds__volet-corps {
+  padding: var(--ae-r4) clamp(1.25rem, 1rem + 1vw, 1.75rem) clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  display: grid;
+  gap: var(--ae-r4);
+  border-top: 1px solid var(--ae-trait);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Panneau de résultat — la bascule
+ * ------------------------------------------------------------------ */
+
+.aeds__panneau {
+  border-radius: var(--ae-rayon);
+  background: var(--ae-blanc);
+  box-shadow: var(--ae-ombre-carte);
+  overflow: hidden;
+}
+
+.aeds__panneau-tete {
+  padding: clamp(1.25rem, 1rem + 1.2vw, 2rem);
+  background: linear-gradient(180deg, var(--ae-ardoise-voile), var(--ae-blanc));
+  border-bottom: 1px solid var(--ae-trait);
+}
+
+.aeds__panneau-titre {
+  font-family: var(--ae-titres);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+.aeds__panneau-sous {
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  color: var(--ae-gris);
+}
+
+.aeds__montant {
+  display: block;
+  margin-top: var(--ae-r4);
+  font-family: var(--ae-titres);
+  font-size: clamp(2.5rem, 1.6rem + 3.4vw, 3.75rem);
+  line-height: 0.98;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ae-encre);
+}
+.aeds__montant--nul { color: var(--ae-vert-fonce); }
+
+.aeds__montant-note {
+  margin-top: var(--ae-r3);
+  font-size: 0.9375rem;
+  color: var(--ae-gris);
+  max-width: 46ch;
+}
+.aeds__montant-note b { color: var(--ae-vert-fonce); font-weight: 700; }
+
+/* La masse */
+
+.aeds__masse { padding: clamp(1.25rem, 1rem + 1.2vw, 2rem); }
+
+.aeds__masse-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--ae-r3);
+  margin-bottom: var(--ae-r3);
+  font-size: 0.8125rem;
+  color: var(--ae-gris);
+}
+.aeds__masse-entete b {
+  color: var(--ae-encre);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9375rem;
+}
+
+.aeds__barre {
+  display: flex;
+  height: 3rem;
+  border-radius: var(--ae-rayon-sm);
+  overflow: hidden;
+  background: var(--ae-ardoise-voile);
+  /* Les trois parts s'animent en largeur : elles se poussent l'une l'autre,
+     ce qu'un scaleX déformerait (les hachures s'étireraient). On confine donc
+     le recalcul de mise en page à la barre elle-même. */
+  contain: layout paint;
+}
+
+.aeds__part {
+  min-width: 0;
+  width: 0;
+  transition: width var(--ae-transition-masse);
+}
+.aeds__part--du { background: var(--ae-ardoise); }
+.aeds__part--deduit { background: var(--ae-vert); }
+.aeds__part--mobilisable {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(125, 172, 22, 0.32) 0 6px,
+    rgba(125, 172, 22, 0.08) 6px 12px
+  );
+  box-shadow: inset 0 0 0 1.5px var(--ae-vert);
+}
+
+.aeds__legende-masse { display: grid; margin-top: var(--ae-r4); }
+
+.aeds__ligne-legende {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 0.7rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--ae-trait);
+  font-size: 0.9375rem;
+}
+.aeds__ligne-legende:last-child { border-bottom: 0; }
+
+.aeds__pastille {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 3px;
+  align-self: center;
+  flex: none;
+}
+.aeds__pastille--du { background: var(--ae-ardoise); }
+.aeds__pastille--deduit { background: var(--ae-vert); }
+.aeds__pastille--mobilisable {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(125, 172, 22, 0.5) 0 3px,
+    transparent 3px 6px
+  );
+  box-shadow: inset 0 0 0 1.5px var(--ae-vert);
+}
+
+.aeds__ligne-legende b { font-weight: 700; }
+.aeds__legende-detail {
+  display: block;
+  color: var(--ae-gris);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+.aeds__ligne-legende data {
+  font-weight: 700;
+  font-family: var(--ae-titres);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Curseur de simulation */
+
+.aeds__curseur {
+  padding: clamp(1.25rem, 1rem + 1.2vw, 2rem);
+  border-top: 1px solid var(--ae-trait);
+  background: var(--ae-vert-voile);
+}
+
+.aeds__curseur-titre {
+  font-family: var(--ae-titres);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: var(--ae-r1);
+}
+.aeds__curseur-note {
+  font-size: 0.8125rem;
+  color: var(--ae-encre-douce);
+  margin-bottom: var(--ae-r3);
+  max-width: 52ch;
+}
+
+.aeds__curseur input[type="range"] {
+  width: 100%;
+  height: 2.75rem;
+  margin: 0;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.aeds__curseur input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(
+    to right,
+    var(--ae-vert) 0 var(--aeds-progression, 0%),
+    rgba(31, 42, 48, 0.14) var(--aeds-progression, 0%) 100%
+  );
+}
+.aeds__curseur input[type="range"]::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(31, 42, 48, 0.14);
+}
+.aeds__curseur input[type="range"]::-moz-range-progress {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--ae-vert);
+}
+.aeds__curseur input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: -0.5rem;
+  border: 3px solid var(--ae-blanc);
+  border-radius: 50%;
+  background: var(--ae-vert-fonce);
+  box-shadow: 0 2px 6px rgba(31, 42, 48, 0.3);
+}
+.aeds__curseur input[type="range"]::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid var(--ae-blanc);
+  border-radius: 50%;
+  background: var(--ae-vert-fonce);
+  box-shadow: 0 2px 6px rgba(31, 42, 48, 0.3);
+}
+
+.aeds__curseur-sortie {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--ae-r3);
+  font-size: 0.875rem;
+  color: var(--ae-gris);
+}
+.aeds__curseur-sortie output {
+  display: block;
+  font-family: var(--ae-titres);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ae-encre);
+  font-variant-numeric: tabular-nums;
+}
+.aeds__gain {
+  color: var(--ae-vert-fonce);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Pied du panneau : l'action */
+
+.aeds__panneau-pied {
+  padding: clamp(1.25rem, 1rem + 1.2vw, 2rem);
+  border-top: 1px solid var(--ae-trait);
+  display: grid;
+  gap: var(--ae-r3);
+}
+
+.aeds__bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3rem;
+  padding: 0.8rem 1.6rem;
+  border: 2px solid transparent;
+  border-radius: var(--ae-pilule);
+  font-family: var(--ae-titres);
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--ae-transition), transform var(--ae-transition),
+    border-color var(--ae-transition), color var(--ae-transition),
+    box-shadow var(--ae-transition);
+}
+.aeds__bouton--principal {
+  background: linear-gradient(100deg, var(--ae-orange-clair), var(--ae-orange));
+  color: var(--ae-blanc);
+  box-shadow: var(--ae-ombre-action);
+}
+.aeds__bouton--principal:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -8px rgba(239, 124, 0, 0.65);
+}
+.aeds__bouton--fantome {
+  background: transparent;
+  border-color: var(--ae-trait-fort);
+  color: var(--ae-encre-douce);
+}
+.aeds__bouton--fantome:hover { border-color: var(--ae-encre-douce); background: var(--ae-papier); }
+.aeds__bouton[disabled] { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.aeds__pied-note {
+  font-size: 0.75rem;
+  color: var(--ae-gris);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Alertes
+ * ------------------------------------------------------------------ */
+
+.aeds__alertes { display: grid; gap: var(--ae-r3); margin-top: var(--ae-r4); }
+
+.aeds__alerte {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--ae-r3);
+  padding: var(--ae-r4);
+  border: 1px solid var(--ae-trait);
+  border-radius: var(--ae-rayon-sm);
+  background: var(--ae-blanc);
+  font-size: 0.875rem;
+}
+.aeds__alerte svg { flex: none; margin-top: 0.15rem; }
+.aeds__alerte b { display: block; margin-bottom: 0.15rem; }
+.aeds__alerte p { color: var(--ae-gris); }
+.aeds__alerte--attention { background: var(--ae-orange-voile); border-color: #f2cf9e; }
+.aeds__alerte--attention svg { color: var(--ae-orange-fonce); }
+.aeds__alerte--info svg { color: var(--ae-vert-fonce); }
+
+/* ------------------------------------------------------------------ *
+ *  Détail du calcul
+ * ------------------------------------------------------------------ */
+
+.aeds__detail { margin-top: clamp(2rem, 1.5rem + 2vw, 3.5rem); }
+
+.aeds__section-titre {
+  font-size: clamp(1.35rem, 1.1rem + 0.9vw, 1.85rem);
+}
+.aeds__section-note {
+  margin-top: var(--ae-r2);
+  margin-bottom: var(--ae-r5);
+  color: var(--ae-gris);
+  max-width: 68ch;
+}
+
+.aeds__enveloppe-tableau {
+  overflow-x: auto;
+  border-radius: var(--ae-rayon-md);
+  background: var(--ae-blanc);
+  box-shadow: var(--ae-ombre-douce);
+}
+
+.aeds__tableau {
+  width: 100%;
+  min-width: 30rem;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+.aeds__tableau caption {
+  text-align: left;
+  padding: var(--ae-r3) var(--ae-r5);
+  font-size: 0.8125rem;
+  color: var(--ae-gris);
+  background: var(--ae-papier);
+  border-bottom: 1px solid var(--ae-trait);
+}
+.aeds__tableau th,
+.aeds__tableau td {
+  padding: 0.75rem var(--ae-r5);
+  text-align: left;
+  border-bottom: 1px solid var(--ae-trait);
+  vertical-align: top;
+}
+.aeds__tableau tbody tr:last-child td { border-bottom: 0; }
+.aeds__tableau thead th {
+  font-family: var(--ae-titres);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ae-gris);
+  background: var(--ae-papier);
+}
+.aeds__tableau td:last-child,
+.aeds__tableau th:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.aeds__formule {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  color: var(--ae-gris);
+}
+.aeds__ligne--somme td { background: var(--ae-papier); font-weight: 700; }
+.aeds__ligne--deduction td:last-child { color: var(--ae-vert-fonce); font-weight: 700; }
+.aeds__ligne--totale td {
+  background: var(--ae-encre);
+  color: var(--ae-blanc);
+  font-family: var(--ae-titres);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  border-bottom: 0;
+}
+.aeds__ligne--totale .aeds__formule { color: #b9c6cd; }
+
+/* ------------------------------------------------------------------ *
+ *  Sortie : le levier
+ * ------------------------------------------------------------------ */
+
+.aeds__levier {
+  margin-top: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+  padding: clamp(1.5rem, 1rem + 2vw, 2.75rem);
+  border-radius: var(--ae-rayon);
+  background: var(--ae-vert-voile);
+  border: 1px solid var(--ae-vert-trait);
+}
+
+.aeds__levier-grille {
+  display: grid;
+  gap: var(--ae-r5);
+  margin-top: var(--ae-r5);
+}
+@media (min-width: 48rem) {
+  .aeds__levier-grille { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.aeds__levier-item h3 {
+  font-size: 1rem;
+  margin-bottom: var(--ae-r1);
+}
+.aeds__levier-item p { font-size: 0.9375rem; color: var(--ae-encre-douce); }
+.aeds__levier-chiffre {
+  display: block;
+  font-family: var(--ae-titres);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ae-vert-fonce);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: var(--ae-r1);
+}
+
+.aeds__poles { display: flex; flex-wrap: wrap; gap: var(--ae-r2); margin-top: var(--ae-r5); }
+.aeds__pole {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--ae-vert-trait);
+  border-radius: var(--ae-pilule);
+  background: var(--ae-blanc);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ae-vert-fonce);
+}
+
+.aeds__levier-action { margin-top: var(--ae-r5); display: flex; flex-wrap: wrap; gap: var(--ae-r3); }
+
+.aeds__mention {
+  margin-top: clamp(2rem, 1.5rem + 2vw, 3rem);
+  padding-top: var(--ae-r4);
+  border-top: 1px solid var(--ae-trait-fort);
+  font-size: 0.8125rem;
+  color: var(--ae-gris);
+}
+.aeds__mention a { color: var(--ae-orange-fonce); }
+.aeds__mention ul { margin-top: var(--ae-r2); display: grid; gap: 0.2rem; }
+.aeds__mention li { padding-left: 1rem; position: relative; }
+.aeds__mention li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0.6rem;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--ae-trait-fort);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Barre récapitulative mobile
+ * ------------------------------------------------------------------ */
+
+.aeds__rappel {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 40;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ae-r4);
+  padding: var(--ae-r3) var(--ae-r4);
+  background: var(--ae-blanc);
+  border-top: 1px solid var(--ae-trait);
+  box-shadow: 0 -8px 28px -14px rgba(31, 42, 48, 0.5);
+  padding-bottom: calc(var(--ae-r3) + env(safe-area-inset-bottom, 0px));
+}
+.aeds__rappel[data-visible="true"] { display: flex; }
+@media (min-width: 64rem) { .aeds__rappel { display: none !important; } }
+.aeds__rappel small { display: block; font-size: 0.75rem; color: var(--ae-gris); }
+.aeds__rappel data {
+  font-family: var(--ae-titres);
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.aeds__rappel .aeds__bouton { min-height: 2.75rem; padding: 0.5rem 1.1rem; font-size: 0.9375rem; }
+
+/* ------------------------------------------------------------------ *
+ *  Impression
+ * ------------------------------------------------------------------ */
+
+@media print {
+  .aeds__rappel, .aeds__curseur, .aeds__panneau-pied, .aeds__levier-action {
+    display: none !important;
+  }
+  .aeds__section { background: none; padding: 0; }
+  .aeds__panneau, .aeds__bloc, .aeds__volet, .aeds__enveloppe-tableau {
+    box-shadow: none;
+    border: 1px solid var(--ae-trait-fort);
+  }
+  .aeds__atelier { display: block; }
+  .aeds__volet[open] .aeds__volet-corps { display: grid; }
+  .aeds__ligne--totale td { background: none; color: var(--ae-encre); border-top: 2px solid var(--ae-encre); }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Mouvement réduit
+ * ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .aeds *, .aeds *::before, .aeds *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Contraste forcé
+ * ------------------------------------------------------------------ */
+
+@media (forced-colors: active) {
+  .aeds__part { forced-color-adjust: none; }
+  .aeds__part--du { background: GrayText; }
+  .aeds__part--deduit { background: Highlight; }
+  .aeds__part--mobilisable { background: transparent; outline: 2px dashed Highlight; outline-offset: -2px; }
+  .aeds__panneau, .aeds__bloc, .aeds__volet { border: 1px solid CanvasText; }
+}

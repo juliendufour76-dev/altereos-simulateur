@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculateur OETH — AlterEos</title>
+<meta name="description" content="Estimez votre contribution DOETH / AGEFIPH et découvrez la part que vous pouvez transformer en prestation confiée à une entreprise adaptée.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/doeth-simulateur.css">
+<style>
+  /* Page de démonstration : reproduit le cadre de la maquette pour juger le
+     simulateur en situation. Ce fichier n'est pas livré dans le plugin. */
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Lato, "Segoe UI", system-ui, sans-serif;
+    color: #1f2a30;
+    background: #fff;
+    line-height: 1.6;
+  }
+  .page { max-width: 84rem; margin: 0 auto; padding: 0 1rem 4rem; }
+  .demo-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: 1rem 0;
+  }
+  .demo-logo { font-family: Poppins, sans-serif; font-weight: 700; font-size: 1.25rem; }
+  .demo-logo span { color: #7dac16; }
+  .demo-nav a {
+    display: inline-flex; align-items: center; min-height: 2.75rem;
+    padding: 0.5rem 1.4rem; border-radius: 999px;
+    background: linear-gradient(100deg, #f5a623, #ef7c00);
+    color: #fff; text-decoration: none;
+    font-family: Poppins, sans-serif; font-weight: 600;
+  }
+  .demo-hero {
+    position: relative; overflow: hidden;
+    border-radius: 20px; padding: clamp(2.5rem, 2rem + 5vw, 5.5rem) clamp(1.5rem, 1rem + 3vw, 4rem);
+    background:
+      linear-gradient(100deg, rgba(20,32,38,.92), rgba(20,32,38,.55)),
+      radial-gradient(90% 120% at 80% 20%, #4a6b7a, #1b2b33);
+    color: #fff;
+  }
+  .demo-hero h1 {
+    margin: 0; font-family: Poppins, sans-serif; font-weight: 700;
+    font-size: clamp(2rem, 1.4rem + 3vw, 3.4rem); letter-spacing: -0.03em;
+  }
+  .demo-hero p { max-width: 46ch; margin: 1rem 0 0; color: #dbe6ea; }
+  .demo-intro { max-width: 68ch; margin: clamp(2.5rem,2rem+3vw,4.5rem) 0; }
+  .demo-intro h2 {
+    font-family: Poppins, sans-serif; letter-spacing: -0.02em;
+    font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem); margin: 0 0 1rem;
+  }
+  .demo-intro p { color: #5b6b75; margin: 0 0 0.75rem; }
+  .demo-contact {
+    margin-top: clamp(2.5rem, 2rem + 3vw, 4.5rem);
+    border-radius: 20px; padding: clamp(1.75rem, 1.5rem + 2vw, 3.5rem);
+    background: linear-gradient(115deg, #f5a623, #ef7c00);
+    color: #fff;
+  }
+  .demo-contact h2 { font-family: Poppins, sans-serif; margin: 0 0 1.5rem; letter-spacing: -0.02em; }
+  .demo-contact form { display: grid; gap: 0.75rem; max-width: 34rem; }
+  .demo-contact label { font-size: 0.875rem; font-weight: 700; }
+  .demo-contact input, .demo-contact textarea {
+    width: 100%; padding: 0.7rem 0.9rem; min-height: 2.75rem;
+    border: 0; border-radius: 10px; font: inherit; color: #1f2a30;
+  }
+  .demo-contact textarea { min-height: 9rem; }
+  .demo-contact button {
+    justify-self: start; min-height: 3rem; padding: 0.7rem 1.8rem;
+    border: 0; border-radius: 999px; background: #fff; color: #b85c00;
+    font-family: Poppins, sans-serif; font-weight: 600; font-size: 1rem; cursor: pointer;
+  }
+  .demo-note {
+    margin: 3rem 0 0; padding: 1rem 1.25rem; border-radius: 12px;
+    background: #f1f5f8; font-size: 0.875rem; color: #5b6b75;
+  }
+</style>
+</head>
+<body>
+
+<!--
+  THESIS: la contribution OETH n'est pas une amende à afficher, c'est une masse
+  à répartir ; la page refuse le compteur unique et montre ce qui reste dû face
+  à ce qui est encore transformable en prestation.
+  OWN-WORLD: monde clair de la maquette AlterEos — cartes blanches très
+  arrondies, ombres diffuses, bande #f1f5f8, orange #ef7c00 réservé à l'action
+  seule, vert #7dac16 pour la valeur transformée, Poppins en titres, Lato en
+  texte.
+  STORY: un DRH arrive avec son effectif et son nombre de RQTH, obtient un
+  montant fiable en dix secondes, voit qu'une partie est convertible, et
+  demande à en parler.
+  FIRST VIEWPORT: titre et trois gages à gauche, formulaire en trois cartes
+  blanches, panneau de résultat collant à droite avec le montant, la barre
+  scindée en trois parts et le curseur de prestation ; l'action orange est
+  au pied du panneau.
+  FORM: candidat 5 de la liste ordonnée — « la bascule » ; seed 50eb37f2.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the
+  finish review, the verdict, and DESIGN.md
+-->
+
+<div class="page">
+
+  <nav class="demo-nav">
+    <span class="demo-logo">Alter<span>Eos</span></span>
+    <a href="#contact">Contactez-nous</a>
+  </nav>
+
+  <header class="demo-hero">
+    <h1>Calculateur OETH</h1>
+    <p>Toute entreprise de 20 salariés et plus doit employer 6 % de personnes en situation
+       de handicap. Estimez votre contribution et ce que vous pouvez en faire.</p>
+  </header>
+
+  <section class="demo-intro">
+    <h2>Qu’est-ce que l’OETH ?</h2>
+    <p>L’obligation d’emploi des travailleurs handicapés impose à toute entreprise d’au moins
+       20 salariés d’employer 6 % de bénéficiaires. À défaut, une contribution annuelle est
+       due à l’Urssaf, reversée à l’Agefiph.</p>
+    <p>Une partie de cette contribution peut être déduite en confiant des prestations à une
+       entreprise adaptée : 30 % du coût de main-d’œuvre facturé vient en déduction, dans la
+       limite de 50 % ou 75 % de la contribution brute.</p>
+  </section>
+
+  <!-- Le simulateur : un seul point de montage -->
+  <div data-aeds
+       id="simulateur"
+       data-annee="2026"
+       data-formulaire-contact="#contact"
+       data-champ-message="#projet-message">
+    <noscript>
+      <p><strong>Le simulateur nécessite JavaScript.</strong> La formule reste simple :
+        multipliez le nombre de bénéficiaires manquants (6 % de votre effectif, arrondi à
+        l’unité inférieure, moins vos bénéficiaires employés) par 400, 500 ou 600 selon votre
+        taille, puis par le SMIC horaire brut au 31 décembre de l’année déclarée.
+        <a href="#contact">Contactez-nous</a> pour une estimation détaillée.</p>
+    </noscript>
+  </div>
+
+  <section class="demo-contact" id="contact">
+    <h2>Discutons de votre projet</h2>
+    <form onsubmit="event.preventDefault(); alert('Démonstration — le formulaire du site prendra le relais.');">
+      <label for="projet-nom">Entreprise</label>
+      <input type="text" id="projet-nom" name="entreprise" autocomplete="organization">
+      <label for="projet-email">E-mail</label>
+      <input type="email" id="projet-email" name="email" autocomplete="email">
+      <label for="projet-message">Décrivez votre besoin</label>
+      <textarea id="projet-message" name="message"></textarea>
+      <button type="submit">Envoyer</button>
+    </form>
+  </section>
+
+  <p class="demo-note">
+    Page de démonstration. En production, le simulateur est monté par le shortcode
+    <code>[altereos_doeth]</code> et le formulaire de contact est celui du site.
+  </p>
+
+</div>
+
+<script src="assets/doeth-core.js"></script>
+<script src="assets/doeth-simulateur.js"></script>
+</body>
+</html>
