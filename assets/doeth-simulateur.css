@@ -51,7 +51,6 @@
   --ae-ombre-action: 0 6px 18px -6px rgba(239, 124, 0, 0.55);
 
   --ae-transition: 200ms cubic-bezier(0.2, 0.8, 0.25, 1);
-  --ae-transition-masse: 560ms cubic-bezier(0.22, 0.85, 0.2, 1);
 
   --ae-titres: Poppins, "Segoe UI", system-ui, -apple-system, sans-serif;
   --ae-texte: Lato, "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -242,6 +241,7 @@
   min-height: 2.75rem;
 }
 .aeds__saisie input:focus { outline: none; }
+.aeds__saisie--grand input { font-size: 1.25rem; min-height: 3.25rem; }
 
 .aeds__unite {
   flex: none;
@@ -421,198 +421,63 @@
 }
 .aeds__montant-note b { color: var(--ae-vert-fonce); font-weight: 700; }
 
-/* La masse */
+/* L'opportunité : la part transformable en prestation */
 
-.aeds__masse { padding: clamp(1.25rem, 1rem + 1.2vw, 2rem); }
-
-.aeds__masse-entete {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--ae-r3);
-  margin-bottom: var(--ae-r3);
-  font-size: 0.8125rem;
-  color: var(--ae-gris);
-}
-.aeds__masse-entete b {
-  color: var(--ae-encre);
-  font-variant-numeric: tabular-nums;
-  font-size: 0.9375rem;
-}
-
-.aeds__barre {
-  display: flex;
-  height: 3rem;
-  border-radius: var(--ae-rayon-sm);
-  overflow: hidden;
-  background: var(--ae-ardoise-voile);
-  /* Les trois parts s'animent en largeur : elles se poussent l'une l'autre,
-     ce qu'un scaleX déformerait (les hachures s'étireraient). On confine donc
-     le recalcul de mise en page à la barre elle-même. */
-  contain: layout paint;
-}
-
-.aeds__part {
-  min-width: 0;
-  width: 0;
-  transition: width var(--ae-transition-masse);
-}
-.aeds__part--du { background: var(--ae-ardoise); }
-.aeds__part--deduit { background: var(--ae-vert); }
-.aeds__part--mobilisable {
-  background: repeating-linear-gradient(
-    -45deg,
-    rgba(125, 172, 22, 0.32) 0 6px,
-    rgba(125, 172, 22, 0.08) 6px 12px
-  );
-  box-shadow: inset 0 0 0 1.5px var(--ae-vert);
-}
-
-.aeds__legende-masse { display: grid; margin-top: var(--ae-r4); }
-
-.aeds__ligne-legende {
+.aeds__opportunite {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: baseline;
-  gap: 0.7rem;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--ae-trait);
-  font-size: 0.9375rem;
-}
-.aeds__ligne-legende:last-child { border-bottom: 0; }
-
-.aeds__pastille {
-  width: 0.85rem;
-  height: 0.85rem;
-  border-radius: 3px;
-  align-self: center;
-  flex: none;
-}
-.aeds__pastille--du { background: var(--ae-ardoise); }
-.aeds__pastille--deduit { background: var(--ae-vert); }
-.aeds__pastille--mobilisable {
-  background: repeating-linear-gradient(
-    -45deg,
-    rgba(125, 172, 22, 0.5) 0 3px,
-    transparent 3px 6px
-  );
-  box-shadow: inset 0 0 0 1.5px var(--ae-vert);
-}
-
-.aeds__ligne-legende b { font-weight: 700; }
-.aeds__legende-detail {
-  display: block;
-  color: var(--ae-gris);
-  font-size: 0.8125rem;
-  line-height: 1.4;
-}
-.aeds__ligne-legende data {
-  font-weight: 700;
-  font-family: var(--ae-titres);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-/* Curseur de simulation */
-
-.aeds__curseur {
+  grid-template-columns: auto 1fr;
+  gap: var(--ae-r3);
   padding: clamp(1.25rem, 1rem + 1.2vw, 2rem);
-  border-top: 1px solid var(--ae-trait);
   background: var(--ae-vert-voile);
+  border-bottom: 1px solid var(--ae-vert-trait);
 }
-
-.aeds__curseur-titre {
+.aeds__opportunite[hidden] { display: none; }
+.aeds__opportunite-icone {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--ae-blanc);
+  color: var(--ae-vert-fonce);
+}
+.aeds__opportunite-titre {
   font-family: var(--ae-titres);
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: var(--ae-r1);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
 }
-.aeds__curseur-note {
-  font-size: 0.8125rem;
+.aeds__opportunite-titre strong {
+  display: block;
+  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ae-vert-fonce);
+}
+.aeds__opportunite-texte {
+  margin-top: var(--ae-r2);
+  font-size: 0.9375rem;
   color: var(--ae-encre-douce);
-  margin-bottom: var(--ae-r3);
   max-width: 52ch;
 }
 
-.aeds__curseur input[type="range"] {
-  width: 100%;
-  height: 2.75rem;
-  margin: 0;
-  background: none;
-  -webkit-appearance: none;
-  appearance: none;
-  cursor: pointer;
-}
-.aeds__curseur input[type="range"]::-webkit-slider-runnable-track {
-  height: 8px;
-  border-radius: 4px;
-  background: linear-gradient(
-    to right,
-    var(--ae-vert) 0 var(--aeds-progression, 0%),
-    rgba(31, 42, 48, 0.14) var(--aeds-progression, 0%) 100%
-  );
-}
-.aeds__curseur input[type="range"]::-moz-range-track {
-  height: 8px;
-  border-radius: 4px;
-  background: rgba(31, 42, 48, 0.14);
-}
-.aeds__curseur input[type="range"]::-moz-range-progress {
-  height: 8px;
-  border-radius: 4px;
-  background: var(--ae-vert);
-}
-.aeds__curseur input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 1.5rem;
-  height: 1.5rem;
-  margin-top: -0.5rem;
-  border: 3px solid var(--ae-blanc);
-  border-radius: 50%;
-  background: var(--ae-vert-fonce);
-  box-shadow: 0 2px 6px rgba(31, 42, 48, 0.3);
-}
-.aeds__curseur input[type="range"]::-moz-range-thumb {
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 3px solid var(--ae-blanc);
-  border-radius: 50%;
-  background: var(--ae-vert-fonce);
-  box-shadow: 0 2px 6px rgba(31, 42, 48, 0.3);
-}
+/* L'appel à l'action */
 
-.aeds__curseur-sortie {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--ae-r3);
-  font-size: 0.875rem;
-  color: var(--ae-gris);
-}
-.aeds__curseur-sortie output {
-  display: block;
-  font-family: var(--ae-titres);
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--ae-encre);
-  font-variant-numeric: tabular-nums;
-}
-.aeds__gain {
-  color: var(--ae-vert-fonce);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-/* Pied du panneau : l'action */
-
-.aeds__panneau-pied {
+.aeds__cta {
   padding: clamp(1.25rem, 1rem + 1.2vw, 2rem);
-  border-top: 1px solid var(--ae-trait);
   display: grid;
   gap: var(--ae-r3);
 }
+.aeds__cta-titre {
+  font-size: 1.125rem;
+  text-wrap: balance;
+}
+.aeds__cta-liste { display: grid; gap: 0.35rem; font-size: 0.9375rem; color: var(--ae-encre-douce); }
+.aeds__cta-liste li { display: flex; gap: 0.5rem; align-items: baseline; }
+.aeds__cta-liste svg { flex: none; color: var(--ae-vert-fonce); transform: translateY(2px); }
+.aeds__cta .aeds__bouton { margin-top: var(--ae-r2); }
 
 .aeds__bouton {
   display: inline-flex;
@@ -682,23 +547,13 @@
  *  Détail du calcul
  * ------------------------------------------------------------------ */
 
-.aeds__detail { margin-top: clamp(2rem, 1.5rem + 2vw, 3.5rem); }
-
-.aeds__section-titre {
-  font-size: clamp(1.35rem, 1.1rem + 0.9vw, 1.85rem);
-}
-.aeds__section-note {
-  margin-top: var(--ae-r2);
-  margin-bottom: var(--ae-r5);
-  color: var(--ae-gris);
-  max-width: 68ch;
-}
+.aeds__detail { margin-top: clamp(1.5rem, 1rem + 2vw, 2.5rem); }
+.aeds__detail[hidden] { display: none; }
 
 .aeds__enveloppe-tableau {
   overflow-x: auto;
-  border-radius: var(--ae-rayon-md);
+  border-top: 1px solid var(--ae-trait);
   background: var(--ae-blanc);
-  box-shadow: var(--ae-ombre-douce);
 }
 
 .aeds__tableau {
@@ -755,55 +610,6 @@
 }
 .aeds__ligne--totale .aeds__formule { color: #b9c6cd; }
 
-/* ------------------------------------------------------------------ *
- *  Sortie : le levier
- * ------------------------------------------------------------------ */
-
-.aeds__levier {
-  margin-top: clamp(2rem, 1.5rem + 2vw, 3.5rem);
-  padding: clamp(1.5rem, 1rem + 2vw, 2.75rem);
-  border-radius: var(--ae-rayon);
-  background: var(--ae-vert-voile);
-  border: 1px solid var(--ae-vert-trait);
-}
-
-.aeds__levier-grille {
-  display: grid;
-  gap: var(--ae-r5);
-  margin-top: var(--ae-r5);
-}
-@media (min-width: 48rem) {
-  .aeds__levier-grille { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-.aeds__levier-item h3 {
-  font-size: 1rem;
-  margin-bottom: var(--ae-r1);
-}
-.aeds__levier-item p { font-size: 0.9375rem; color: var(--ae-encre-douce); }
-.aeds__levier-chiffre {
-  display: block;
-  font-family: var(--ae-titres);
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--ae-vert-fonce);
-  font-variant-numeric: tabular-nums;
-  margin-bottom: var(--ae-r1);
-}
-
-.aeds__poles { display: flex; flex-wrap: wrap; gap: var(--ae-r2); margin-top: var(--ae-r5); }
-.aeds__pole {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid var(--ae-vert-trait);
-  border-radius: var(--ae-pilule);
-  background: var(--ae-blanc);
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--ae-vert-fonce);
-}
-
-.aeds__levier-action { margin-top: var(--ae-r5); display: flex; flex-wrap: wrap; gap: var(--ae-r3); }
-
 .aeds__mention {
   margin-top: clamp(2rem, 1.5rem + 2vw, 3rem);
   padding-top: var(--ae-r4);
@@ -812,16 +618,6 @@
   color: var(--ae-gris);
 }
 .aeds__mention a { color: var(--ae-orange-fonce); }
-.aeds__mention ul { margin-top: var(--ae-r2); display: grid; gap: 0.2rem; }
-.aeds__mention li { padding-left: 1rem; position: relative; }
-.aeds__mention li::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 0.6rem;
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--ae-trait-fort);
-}
 
 /* ------------------------------------------------------------------ *
  *  Barre récapitulative mobile
@@ -857,7 +653,7 @@
  * ------------------------------------------------------------------ */
 
 @media print {
-  .aeds__rappel, .aeds__curseur, .aeds__panneau-pied, .aeds__levier-action {
+  .aeds__rappel, .aeds__cta .aeds__bouton, .aeds__pied-note {
     display: none !important;
   }
   .aeds__section { background: none; padding: 0; }
@@ -888,9 +684,6 @@
  * ------------------------------------------------------------------ */
 
 @media (forced-colors: active) {
-  .aeds__part { forced-color-adjust: none; }
-  .aeds__part--du { background: GrayText; }
-  .aeds__part--deduit { background: Highlight; }
-  .aeds__part--mobilisable { background: transparent; outline: 2px dashed Highlight; outline-offset: -2px; }
   .aeds__panneau, .aeds__bloc, .aeds__volet { border: 1px solid CanvasText; }
+  .aeds__opportunite { border: 2px solid Highlight; }
 }

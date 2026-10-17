@@ -42,7 +42,7 @@ Dans la page « Calculateur OETH », à l'endroit où mène le bouton « Lancer 
 | Attribut | Défaut | Rôle |
 |---|---|---|
 | `annee` | `2026` | Année de référence présélectionnée. |
-| `contact` | `#contact` | Sélecteur CSS du bloc de contact vers lequel renvoient les boutons d'action. |
+| `contact` | `#contact` | Sélecteur CSS du bloc de contact vers lequel renvoient les boutons d'action, **ou URL d'une page contact** (`/contact/`) : le résumé y est passé dans le paramètre `?simulation=`, récupérable par la balise dynamique « Paramètre de requête » d'Elementor Pro. |
 | `message` | *(vide)* | Sélecteur CSS du champ « Décrivez votre besoin » à pré-remplir avec le résumé chiffré de la simulation. |
 | `classe` | *(vide)* | Classes CSS additionnelles. |
 
@@ -61,6 +61,12 @@ document.addEventListener('aeds:contact', (e) => {
   console.log(e.detail.resume, e.detail.resultat.contributionDue);
 });
 ```
+
+**Mesure d'audience** — si le site charge Google Tag Manager (`window.dataLayer`), le
+simulateur y pousse trois évènements, sans aucun appel réseau de son côté :
+`aeds_resultat` (premier résultat affiché : contribution, montant déductible, effectif),
+`aeds_affiner` (ouverture du volet facultatif) et `aeds_cta` (clic sur l'appel à l'action,
+avec son emplacement `panneau` ou `barre-mobile`). À déclarer en conversions dans GA4.
 
 Les polices (Poppins pour les titres, Lato pour le texte) sont celles déjà servies
 par le thème. Si ce n'est plus le cas après la refonte :

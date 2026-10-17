@@ -8,6 +8,9 @@
  *        data-formulaire-contact="#contact"
  *        data-champ-message="#projet-message"></div>
  *
+ * data-formulaire-contact accepte un sélecteur CSS (bloc de la même page) ou
+ * une URL (page contact distincte, le résumé est passé dans ?simulation=).
+ *
  * Le module s'initialise seul sur tous les [data-aeds] présents au chargement.
  */
 (function (window, document) {
@@ -36,6 +39,12 @@
   function fNombre(n) { return decimal.format(n || 0); }
   function fPourcent(n) { return decimal.format(n || 0).replace(/\s/g, ' ') + ' %'; }
 
+  // Arrondi commercial pour un ordre de grandeur lisible : 41 237 € → 41 000 €.
+  function fArrondi(n) {
+    var pas = n >= 10000 ? 1000 : 100;
+    return fEuros(Math.round((n || 0) / pas) * pas);
+  }
+
   /* ------------------------------------------------------------------ *
    *  Icônes — tracé unique, épaisseur 1,75
    * ------------------------------------------------------------------ */
@@ -49,13 +58,12 @@
   var ICONES = {
     horloge: icone('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
     bouclier: icone('<path d="M12 3l7 3v6c0 4-3 6.5-7 9-4-2.5-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/>'),
-    balance: icone('<path d="M12 4v16M7 20h10M6 8h12M6 8l-3 6h6zM18 8l3 6h-6z"/>'),
     info: icone('<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>'),
     attention: icone('<path d="M10.3 4.3 2.6 17.5A1.9 1.9 0 0 0 4.3 20.4h15.4a1.9 1.9 0 0 0 1.7-2.9L13.7 4.3a1.9 1.9 0 0 0-3.4 0Z"/><path d="M12 10v4"/><path d="M12 17h.01"/>'),
     fleche: icone('<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>'),
     chevron: icone('<path d="m6 9 6 6 6-6"/>', 20),
-    imprimer: icone('<path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/>'),
-    croix: icone('<path d="M18 6 6 18M6 6l12 12"/>', 14)
+    coche: icone('<path d="m5 12 5 5 9-10"/>', 16),
+    feuille: icone('<path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14"/><path d="M5 19 13 11"/>', 22)
   };
 
   /* ------------------------------------------------------------------ *
@@ -68,7 +76,7 @@
       '<div class="aeds__champ">' +
         '<label class="aeds__label" for="' + id + '">' + label + '</label>' +
         (aide ? '<p class="aeds__aide" id="' + id + '-aide">' + aide + '</p>' : '') +
-        '<div class="aeds__saisie" data-enveloppe="' + id + '">' +
+        '<div class="aeds__saisie' + (o.grand ? ' aeds__saisie--grand' : '') + '" data-enveloppe="' + id + '">' +
           '<input type="number" id="' + id + '" name="' + id + '" ' +
             'inputmode="' + (o.decimal ? 'decimal' : 'numeric') + '" ' +
             'min="' + (o.min !== undefined ? o.min : 0) + '" ' +
@@ -104,13 +112,12 @@
     '<div class="aeds__contenu">' +
 
       '<header class="aeds__ouverture">' +
-        '<h2 class="aeds__titre" id="' + prefixe + '-titre">Estimez votre contribution, et ce que vous pouvez en faire</h2>' +
-        '<p class="aeds__chapo">Renseignez trois chiffres. Le simulateur applique le barème officiel, ' +
-          'affiche le montant dû et la part que vous pouvez transformer en prestation.</p>' +
+        '<h2 class="aeds__titre" id="' + prefixe + '-titre">Votre contribution OETH peut travailler pour vous</h2>' +
+        '<p class="aeds__chapo">Deux chiffres suffisent pour estimer ce que vous versez chaque année, ' +
+          'et la part que vous pouvez transformer en prestations utiles confiées à AlterEos.</p>' +
         '<ul class="aeds__meta">' +
-          '<li>' + ICONES.horloge + 'Résultat immédiat, sans inscription</li>' +
-          '<li>' + ICONES.bouclier + 'Barème Urssaf / Agefiph en vigueur</li>' +
-          '<li>' + ICONES.balance + 'Chaque ligne de calcul est détaillée</li>' +
+          '<li>' + ICONES.horloge + 'Résultat en 30 secondes, sans inscription</li>' +
+          '<li>' + ICONES.bouclier + 'Barème officiel Urssaf / Agefiph</li>' +
         '</ul>' +
       '</header>' +
 
@@ -120,77 +127,58 @@
         '<form class="aeds__form" novalidate data-role="form">' +
 
           '<fieldset class="aeds__bloc">' +
-            '<legend class="aeds__legende">Votre effectif</legend>' +
-            '<span class="aeds__legende-note">Les chiffres de l’année sur laquelle porte la déclaration.</span>' +
+            '<legend class="aeds__legende">Votre entreprise</legend>' +
             '<div class="aeds__champs">' +
+              champNombre(prefixe + '-effectif', 'Nombre de salariés',
+                'Effectif moyen annuel, tel que notifié par l’Urssaf ou la MSA.',
+                { unite: 'salariés', placeholder: 'ex. 150', decimal: true, step: 0.01, grand: true }) +
+              champNombre(prefixe + '-boeth', 'Dont salariés en situation de handicap',
+                'Reconnus travailleurs handicapés (RQTH, invalidité, AAH…). Laissez vide si aucun.',
+                { unite: 'pers.', placeholder: 'ex. 3', decimal: true, step: 0.01, grand: true }) +
+            '</div>' +
+          '</fieldset>' +
+
+          '<details class="aeds__volet" data-role="affiner">' +
+            '<summary>Affiner mon estimation <small>facultatif</small>' +
+              '<span class="aeds__volet-fleche">' + ICONES.chevron + '</span></summary>' +
+            '<div class="aeds__volet-corps">' +
               '<div class="aeds__champ">' +
-                '<span class="aeds__label" id="' + prefixe + '-annee-label">Année de référence</span>' +
+                '<span class="aeds__label" id="' + prefixe + '-annee-label">Année déclarée</span>' +
                 '<p class="aeds__aide" id="' + prefixe + '-annee-aide" data-role="annee-aide"></p>' +
                 '<div class="aeds__segments" role="radiogroup" ' +
                   'aria-labelledby="' + prefixe + '-annee-label" ' +
                   'aria-describedby="' + prefixe + '-annee-aide">' + segments + '</div>' +
               '</div>' +
-              champNombre(prefixe + '-effectif', 'Effectif d’assujettissement',
-                'Effectif moyen annuel notifié par l’Urssaf ou la MSA au plus tard le 15 mars. ' +
-                'Apprentis, alternants, stagiaires et intérimaires en sont exclus.',
-                { unite: 'salariés', placeholder: 'ex. 240', decimal: true, step: 0.01 }) +
-            '</div>' +
-          '</fieldset>' +
-
-          '<fieldset class="aeds__bloc">' +
-            '<legend class="aeds__legende">Vos bénéficiaires</legend>' +
-            '<span class="aeds__legende-note">Personnes reconnues bénéficiaires de l’obligation d’emploi (RQTH, ' +
-              'invalidité, AAH, pension militaire…).</span>' +
-            '<div class="aeds__champs aeds__champs--duo">' +
-              champNombre(prefixe + '-boeth', 'Bénéficiaires salariés',
-                'Effectif moyen annuel, tous contrats confondus.',
-                { unite: 'pers.', decimal: true, step: 0.01 }) +
-              champNombre(prefixe + '-seniors', 'Dont 50 ans et plus',
-                'Chacun compte pour 1,5 unité.',
-                { unite: 'pers.', decimal: true, step: 0.01 }) +
-            '</div>' +
-            '<div class="aeds__champs" style="margin-top:1rem">' +
-              champNombre(prefixe + '-externes', 'Bénéficiaires accueillis',
-                'Intérimaires, salariés mis à disposition, stagiaires et PMSMP.',
-                { unite: 'pers.', decimal: true, step: 0.01 }) +
-            '</div>' +
-          '</fieldset>' +
-
-          '<fieldset class="aeds__bloc">' +
-            '<legend class="aeds__legende">Vos achats et dépenses</legend>' +
-            '<span class="aeds__legende-note">Montants hors taxes acquittés sur l’année déclarée.</span>' +
-            '<div class="aeds__champs">' +
-              champNombre(prefixe + '-achats', 'Achats au secteur adapté et protégé',
-                'Coût de la main-d’œuvre facturé par une entreprise adaptée (EA), un ESAT, ' +
-                'un travailleur indépendant handicapé ou une entreprise de portage. ' +
-                'Il figure sur l’attestation annuelle de votre prestataire.',
-                { unite: '€ HT', placeholder: 'ex. 40 000', step: 100 }) +
-              champNombre(prefixe + '-depenses', 'Dépenses déductibles',
-                'Accessibilité, maintien dans l’emploi, accompagnement, partenariats. ' +
-                'Retenues dans la limite de 10 % de la contribution brute.',
-                { unite: '€ HT', step: 100 }) +
-            '</div>' +
-          '</fieldset>' +
-
-          '<details class="aeds__volet">' +
-            '<summary>Situations particulières <small>ECAP, accord agréé, seuil</small>' +
-              '<span class="aeds__volet-fleche">' + ICONES.chevron + '</span></summary>' +
-            '<div class="aeds__volet-corps">' +
+              '<div class="aeds__champs aeds__champs--duo">' +
+                champNombre(prefixe + '-seniors', 'Dont 50 ans et plus',
+                  'Chacun compte pour 1,5.',
+                  { unite: 'pers.', decimal: true, step: 0.01 }) +
+                champNombre(prefixe + '-externes', 'Bénéficiaires accueillis',
+                  'Intérim, mise à disposition, stagiaires, PMSMP.',
+                  { unite: 'pers.', decimal: true, step: 0.01 }) +
+              '</div>' +
+              '<div class="aeds__champs aeds__champs--duo">' +
+                champNombre(prefixe + '-achats', 'Achats déjà réalisés au secteur adapté',
+                  'Coût de main-d’œuvre indiqué sur l’attestation de votre prestataire (EA, ESAT, TIH).',
+                  { unite: '€ HT', step: 100 }) +
+                champNombre(prefixe + '-depenses', 'Dépenses déductibles',
+                  'Accessibilité, maintien dans l’emploi… Limitées à 10 % de la contribution.',
+                  { unite: '€ HT', step: 100 }) +
+              '</div>' +
               '<div class="aeds__champs">' +
                 champNombre(prefixe + '-ecap', 'Salariés sur un emploi ECAP',
-                  'Emplois exigeant des conditions d’aptitude particulières (conduite, sécurité, ' +
-                  'certains postes du BTP…). Ils ouvrent droit à une minoration.',
+                  'Postes exigeant des conditions d’aptitude particulières (conduite, sécurité…).',
                   { unite: 'pers.', decimal: true, step: 0.01 }) +
               '</div>' +
               '<div class="aeds__coches">' +
                 coche(prefixe + '-ecap-derogation', 'Établissement dont l’effectif ECAP atteint 80 %',
-                  'Le coefficient tombe alors à 40 fois le SMIC horaire.') +
+                  'Le coefficient tombe à 40 fois le SMIC horaire.') +
                 coche(prefixe + '-surcontribution', 'Aucune action en faveur de l’emploi des personnes handicapées depuis plus de 3 ans',
                   'Ni bénéficiaire employé, ni contrat au secteur adapté d’au moins 600 fois le SMIC, ni accord agréé.') +
                 coche(prefixe + '-accord', 'Accord agréé en cours d’application',
-                  'La contribution finance le programme d’actions de l’accord au lieu d’être versée.') +
+                  'La contribution finance le programme d’actions de l’accord.') +
                 coche(prefixe + '-seuil', 'Seuil de 20 salariés franchi il y a moins de 5 ans',
-                  'Le franchissement de seuil suspend la contribution pendant 5 ans.') +
+                  'La contribution est suspendue pendant 5 ans.') +
               '</div>' +
             '</div>' +
           '</details>' +
@@ -202,63 +190,31 @@
           '<div class="aeds__panneau">' +
 
             '<div class="aeds__panneau-tete">' +
-              '<h3 class="aeds__panneau-titre">Contribution estimée</h3>' +
-              '<p class="aeds__panneau-sous" data-role="sous-titre">Renseignez votre effectif pour lancer le calcul.</p>' +
+              '<h3 class="aeds__panneau-titre">Votre contribution estimée</h3>' +
+              '<p class="aeds__panneau-sous" data-role="sous-titre">Indiquez votre nombre de salariés.</p>' +
               '<strong class="aeds__montant" data-role="montant">—</strong>' +
               '<p class="aeds__montant-note" data-role="montant-note">Le résultat s’affiche ici, sans e-mail ni inscription.</p>' +
             '</div>' +
 
-            '<div class="aeds__masse" data-role="masse" hidden>' +
-              '<div class="aeds__masse-entete">' +
-                '<span>Répartition de la contribution brute</span>' +
-                '<b data-role="brute">—</b>' +
+            '<div class="aeds__opportunite" data-role="opportunite" hidden>' +
+              '<span class="aeds__opportunite-icone">' + ICONES.feuille + '</span>' +
+              '<div>' +
+                '<p class="aeds__opportunite-titre">Jusqu’à <strong data-role="mobilisable">—</strong> ' +
+                  'déductibles de cette contribution</p>' +
+                '<p class="aeds__opportunite-texte" data-role="opportunite-texte"></p>' +
               '</div>' +
-              '<div class="aeds__barre" role="img" data-role="barre" aria-label="">' +
-                '<div class="aeds__part aeds__part--du" data-role="part-du"></div>' +
-                '<div class="aeds__part aeds__part--mobilisable" data-role="part-mobilisable"></div>' +
-                '<div class="aeds__part aeds__part--deduit" data-role="part-deduit"></div>' +
-              '</div>' +
-              '<ul class="aeds__legende-masse">' +
-                '<li class="aeds__ligne-legende">' +
-                  '<span class="aeds__pastille aeds__pastille--du"></span>' +
-                  '<span><b>Reste dû à l’Urssaf</b>' +
-                    '<span class="aeds__legende-detail">Versé avec la DSN, sans contrepartie.</span></span>' +
-                  '<data data-role="valeur-du">—</data>' +
-                '</li>' +
-                '<li class="aeds__ligne-legende" data-role="ligne-mobilisable">' +
-                  '<span class="aeds__pastille aeds__pastille--mobilisable"></span>' +
-                  '<span><b>Encore transformable</b>' +
-                    '<span class="aeds__legende-detail" data-role="detail-mobilisable"></span></span>' +
-                  '<data data-role="valeur-mobilisable">—</data>' +
-                '</li>' +
-                '<li class="aeds__ligne-legende" data-role="ligne-deduit">' +
-                  '<span class="aeds__pastille aeds__pastille--deduit"></span>' +
-                  '<span><b>Déjà déduit</b>' +
-                    '<span class="aeds__legende-detail">Sous-traitance, ECAP et dépenses déductibles.</span></span>' +
-                  '<data data-role="valeur-deduit">—</data>' +
-                '</li>' +
+            '</div>' +
+
+            '<div class="aeds__cta" data-role="cta-bloc">' +
+              '<h4 class="aeds__cta-titre" data-role="cta-titre">Allez plus loin avec un expert AlterEos</h4>' +
+              '<ul class="aeds__cta-liste">' +
+                '<li>' + ICONES.coche + 'Vérification de votre calcul avec vos chiffres réels</li>' +
+                '<li>' + ICONES.coche + 'Prestations déductibles adaptées à vos besoins</li>' +
+                '<li>' + ICONES.coche + 'Un plan pour réduire durablement votre contribution</li>' +
               '</ul>' +
-            '</div>' +
-
-            '<div class="aeds__curseur" data-role="curseur-bloc" hidden>' +
-              '<h4 class="aeds__curseur-titre">Et si vous confiiez une prestation à AlterEos ?</h4>' +
-              '<p class="aeds__curseur-note">Déplacez le curseur : 30 % du coût de main-d’œuvre facturé ' +
-                'vient en déduction de votre contribution.</p>' +
-              '<label class="aeds__cache" for="' + prefixe + '-curseur">Montant de prestation confié au secteur adapté</label>' +
-              '<input type="range" id="' + prefixe + '-curseur" data-role="curseur" ' +
-                'min="0" max="100000" step="500" value="0">' +
-              '<div class="aeds__curseur-sortie">' +
-                '<span>Prestation confiée<output for="' + prefixe + '-curseur" data-role="curseur-valeur">0 €</output></span>' +
-                '<span class="aeds__gain" data-role="curseur-gain"></span>' +
-              '</div>' +
-            '</div>' +
-
-            '<div class="aeds__panneau-pied">' +
-              '<button type="button" class="aeds__bouton aeds__bouton--principal" data-role="cta" disabled>' +
-                'Faire vérifier mon estimation' + ICONES.fleche + '</button>' +
-              '<button type="button" class="aeds__bouton aeds__bouton--fantome" data-role="impression">' +
-                ICONES.imprimer + 'Imprimer ou enregistrer en PDF</button>' +
-              '<p class="aeds__pied-note">Un échange de 30 minutes avec notre équipe, sans engagement.</p>' +
+              '<button type="button" class="aeds__bouton aeds__bouton--principal" data-role="cta" data-emplacement="panneau">' +
+                'Être rappelé par un expert' + ICONES.fleche + '</button>' +
+              '<p class="aeds__pied-note">Échange de 30 minutes, gratuit et sans engagement.</p>' +
             '</div>' +
 
           '</div>' +
@@ -268,11 +224,10 @@
 
       '</div>' +
 
-      /* ---------- Détail ---------- */
-      '<div class="aeds__detail" data-role="detail" hidden>' +
-        '<h3 class="aeds__section-titre">Le détail du calcul</h3>' +
-        '<p class="aeds__section-note">Chaque ligne indique la formule appliquée. Vous pouvez la reprendre ' +
-          'telle quelle pour contrôler la déclaration établie par votre service paie.</p>' +
+      /* ---------- Détail, replié ---------- */
+      '<details class="aeds__volet aeds__detail" data-role="detail" hidden>' +
+        '<summary>Voir le détail du calcul <small>formule par formule</small>' +
+          '<span class="aeds__volet-fleche">' + ICONES.chevron + '</span></summary>' +
         '<div class="aeds__enveloppe-tableau">' +
           '<table class="aeds__tableau">' +
             '<caption data-role="legende-tableau"></caption>' +
@@ -280,57 +235,13 @@
             '<tbody data-role="corps-tableau"></tbody>' +
           '</table>' +
         '</div>' +
-      '</div>' +
-
-      /* ---------- Levier ---------- */
-      '<div class="aeds__levier" data-role="levier" hidden>' +
-        '<h3 class="aeds__section-titre">Ce que vous pouvez encore transformer</h3>' +
-        '<p class="aeds__section-note">AlterEos est une entreprise adaptée : les prestations que vous nous ' +
-          'confiez sont produites par des équipes majoritairement composées de personnes en situation de ' +
-          'handicap, et 30 % du coût de main-d’œuvre se déduit de votre contribution.</p>' +
-        '<div class="aeds__levier-grille">' +
-          '<div class="aeds__levier-item">' +
-            '<span class="aeds__levier-chiffre" data-role="levier-marge">—</span>' +
-            '<h3>de déduction encore disponible</h3>' +
-            '<p data-role="levier-marge-note"></p>' +
-          '</div>' +
-          '<div class="aeds__levier-item">' +
-            '<span class="aeds__levier-chiffre" data-role="levier-achat">—</span>' +
-            '<h3>de prestation à confier</h3>' +
-            '<p>C’est le volume de main-d’œuvre qui sature votre plafond de déduction. ' +
-              'Répartissable sur plusieurs prestations et plusieurs sites.</p>' +
-          '</div>' +
-          '<div class="aeds__levier-item">' +
-            '<span class="aeds__levier-chiffre" data-role="levier-embauche">—</span>' +
-            '<h3>par unité bénéficiaire employée</h3>' +
-            '<p>Chaque recrutement d’une personne bénéficiaire réduit d’autant la contribution, ' +
-              'en plus des aides à l’embauche mobilisables.</p>' +
-          '</div>' +
-        '</div>' +
-        '<ul class="aeds__poles">' +
-          '<li class="aeds__pole">Numérisation et GED</li>' +
-          '<li class="aeds__pole">Relation client</li>' +
-          '<li class="aeds__pole">Éditique</li>' +
-          '<li class="aeds__pole">Prestations industrielles</li>' +
-          '<li class="aeds__pole">E-logistique</li>' +
-          '<li class="aeds__pole">Formation</li>' +
-        '</ul>' +
-        '<div class="aeds__levier-action">' +
-          '<button type="button" class="aeds__bouton aeds__bouton--principal" data-role="cta-bas">' +
-            'Discuter de mon projet' + ICONES.fleche + '</button>' +
-        '</div>' +
-      '</div>' +
+      '</details>' +
 
       '<footer class="aeds__mention">' +
         '<p><b>Estimation indicative.</b> Ce simulateur ne remplace pas la déclaration en DSN ni ' +
-          'l’effectif d’assujettissement notifié par l’Urssaf ou la MSA. Il ne couvre ni la fonction ' +
-          'publique (FIPHFP) ni le calcul détaillé des accords agréés.</p>' +
-        '<ul>' +
-          '<li>Code du travail, articles L5212-1 et suivants, D5212-19 à D5212-28.</li>' +
-          '<li>Barème appliqué&nbsp;: <span data-role="source-bareme"></span></li>' +
-          '<li>Depuis le 1<sup>er</sup> janvier 2025, l’écrêtement transitoire des hausses de ' +
-            'contribution ne s’applique plus.</li>' +
-        '</ul>' +
+          'l’effectif notifié par l’Urssaf ou la MSA. Il ne couvre ni la fonction publique (FIPHFP) ' +
+          'ni le calcul détaillé des accords agréés. Barème appliqué&nbsp;: ' +
+          '<span data-role="source-bareme"></span> Code du travail, art. L5212-1 et s., D5212-19 à D5212-28.</p>' +
       '</footer>' +
 
     '</div>' +
@@ -338,11 +249,23 @@
 
     '<div class="aeds__rappel" data-role="rappel" data-visible="false">' +
       '<span><small>Contribution estimée</small><data data-role="rappel-montant">—</data></span>' +
-      '<button type="button" class="aeds__bouton aeds__bouton--principal" data-role="cta-mobile">' +
-        'En parler</button>' +
+      '<button type="button" class="aeds__bouton aeds__bouton--principal" data-role="cta-mobile" data-emplacement="barre-mobile">' +
+        'Être rappelé</button>' +
     '</div>' +
 
     '<p class="aeds__cache" role="status" data-role="annonce"></p>';
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  Mesure d'audience — uniquement si le site a déjà un dataLayer (GTM).
+   *  Aucune donnée n'est envoyée par le simulateur lui-même.
+   * ------------------------------------------------------------------ */
+
+  function suivre(evenement, donnees) {
+    if (!window.dataLayer || typeof window.dataLayer.push !== 'function') return;
+    var charge = { event: evenement };
+    for (var cle in donnees) if (Object.prototype.hasOwnProperty.call(donnees, cle)) charge[cle] = donnees[cle];
+    window.dataLayer.push(charge);
   }
 
   /* ------------------------------------------------------------------ *
@@ -386,7 +309,7 @@
       seuil: champ('seuil')
     };
 
-    var etat = { dernier: null, curseurActif: false, animation: null };
+    var etat = { dernier: null, animation: null, resultatSuivi: false };
 
     /* -------------------- Lecture du formulaire -------------------- */
 
@@ -438,26 +361,22 @@
     }
 
     function valider(saisie) {
-      var ok = true;
-
       if (champs.effectif.value !== '' && valeur(champs.effectif) <= 0) {
         signaler(champs.effectif, 'Indiquez un effectif supérieur à zéro.');
-        ok = false;
       } else {
         signaler(champs.effectif, null);
       }
 
       if (saisie.boethSeniors > saisie.boethInternes && champs.seniors.value !== '') {
         signaler(champs.seniors,
-          'Ce nombre ne peut pas dépasser vos ' + fNombre(saisie.boethInternes) + ' bénéficiaires salariés.');
+          'Ce nombre ne peut pas dépasser vos ' + fNombre(saisie.boethInternes) + ' salariés en situation de handicap.');
       } else {
         signaler(champs.seniors, null);
       }
 
       if (saisie.effectifAssujettissement > 0 &&
           saisie.boethInternes > saisie.effectifAssujettissement) {
-        signaler(champs.boeth, 'Vos bénéficiaires salariés dépassent votre effectif total.');
-        ok = false;
+        signaler(champs.boeth, 'Ce nombre dépasse votre effectif total.');
       } else {
         signaler(champs.boeth, null);
       }
@@ -467,8 +386,6 @@
       } else {
         signaler(champs.ecap, null);
       }
-
-      return ok;
     }
 
     /* -------------------- Animation du montant ---------------------- */
@@ -495,26 +412,29 @@
 
     /* -------------------- Rendu ------------------------------------- */
 
+    var CTA_TITRE_DEFAUT = 'Allez plus loin avec un expert AlterEos';
+
+    function majBareme(b) {
+      el['annee-aide'].textContent = 'Déclaration en ' + b.declaration + ' — ' + b.smicSource +
+        ' : ' + fEurosPrecis(b.smicHoraire) + '.';
+      el['source-bareme'].textContent = 'année ' + b.annee + ', ' + b.smicSource +
+        ' (' + fEurosPrecis(b.smicHoraire) + ').';
+    }
+
     function videPanneau(message) {
       el['sous-titre'].textContent = message;
       el.montant.textContent = '—';
       el.montant.classList.remove('aeds__montant--nul');
       el['montant-note'].textContent = 'Le résultat s’affiche ici, sans e-mail ni inscription.';
-      el.masse.hidden = true;
-      el['curseur-bloc'].hidden = true;
+      el.opportunite.hidden = true;
       el.detail.hidden = true;
-      el.levier.hidden = true;
-      el.cta.disabled = true;
+      el['cta-titre'].textContent = CTA_TITRE_DEFAUT;
       el.rappel.setAttribute('data-visible', 'false');
     }
 
     function rendre(r) {
       var b = r.bareme;
-      el['annee-aide'].textContent = 'Déclaration en ' + b.declaration.replace('DSN d’avril ', 'DSN d’avril ') +
-        ' — ' + b.smicSource + ' : ' + fEurosPrecis(b.smicHoraire) + '.';
-      el['source-bareme'].textContent = 'année ' + b.annee + ', ' + b.smicSource +
-        ' (' + fEurosPrecis(b.smicHoraire) + ').';
-
+      majBareme(b);
       rendreAlertes(r);
 
       if (!r.assujetti) {
@@ -524,97 +444,69 @@
         el.montant.textContent = fEuros(0);
         el.montant.classList.add('aeds__montant--nul');
         el['montant-note'].textContent = 'La déclaration en DSN reste obligatoire chaque année.';
-        return;
-      }
-
-      if (r.saisie.effectifAssujettissement <= 0) {
-        videPanneau('Renseignez votre effectif pour lancer le calcul.');
+        el['cta-titre'].textContent = 'Un projet de prestation responsable ? Parlons-en';
+        etat.dernier = r;
         return;
       }
 
       /* Montant principal */
-      var precedent = etat.dernier ? etat.dernier.contributionDue : 0;
+      var precedent = etat.dernier ? (etat.dernier.contributionDue || 0) : 0;
       afficherMontant(el.montant, precedent, r.contributionDue);
       el.montant.classList.toggle('aeds__montant--nul', r.contributionDue === 0);
 
-      el['sous-titre'].textContent = 'Au titre de ' + b.annee + ' — ' + b.declaration;
+      el['sous-titre'].textContent = 'Au titre de ' + b.annee + ', à verser avec la ' + b.declaration;
 
       if (r.objectifAtteint) {
         el['montant-note'].innerHTML = 'Vous atteignez le taux d’emploi de 6 % : ' +
-          '<b>aucune contribution n’est due</b>. La déclaration reste obligatoire.';
+          '<b>aucune contribution n’est due</b>.';
       } else if (r.neutralisee) {
         el['montant-note'].innerHTML = 'Sous accord agréé, les ' + fEuros(r.contributionNette) +
           ' calculés financent votre programme d’actions au lieu d’être versés.';
       } else {
-        el['montant-note'].innerHTML = 'Soit <b>' + fEuros(r.contributionDue / 12) + ' par mois</b>. ' +
-          'Taux d’emploi actuel : ' + fPourcent(r.tauxEmploiPourcent) + ' pour une obligation de 6 %.';
+        el['montant-note'].innerHTML = 'par an, soit <b>' + fEuros(r.contributionDue / 12) + ' par mois</b>. ' +
+          'Votre taux d’emploi&nbsp;: ' + fPourcent(r.tauxEmploiPourcent) + ' pour 6 % attendus.';
       }
 
-      /* La masse */
-      var base = r.contributionBrute;
-      el.masse.hidden = base <= 0;
-      if (base > 0) {
-        var parts = r.bascule.part;
-        var pc = function (v) { return Math.max(0, (v / base) * 100); };
-        el['part-du'].style.width = pc(parts.duIrreductible) + '%';
-        el['part-mobilisable'].style.width = pc(parts.mobilisable) + '%';
-        el['part-deduit'].style.width = pc(parts.deduit) + '%';
-
-        el.brute.textContent = fEuros(base);
-        el['valeur-du'].textContent = fEuros(parts.duIrreductible);
-        el['valeur-mobilisable'].textContent = fEuros(parts.mobilisable);
-        el['valeur-deduit'].textContent = fEuros(parts.deduit);
-
-        el['detail-mobilisable'].textContent = 'Convertible en prestation, dans la limite de ' +
-          Math.round(r.levier.tauxPlafond * 100) + ' % de la contribution brute.';
-
-        el['ligne-mobilisable'].hidden = parts.mobilisable <= 0;
-        el['ligne-deduit'].hidden = parts.deduit <= 0;
-
-        el.barre.setAttribute('aria-label',
-          'Répartition de ' + fEuros(base) + ' de contribution brute : ' +
-          fEuros(parts.duIrreductible) + ' restent dus, ' +
-          fEuros(parts.mobilisable) + ' sont encore transformables en prestation, ' +
-          fEuros(parts.deduit) + ' sont déjà déduits.');
+      /* L'opportunité : ce qui peut devenir prestation */
+      var mobilisable = r.neutralisee ? 0 : r.bascule.part.mobilisable;
+      el.opportunite.hidden = mobilisable <= 0;
+      if (mobilisable > 0) {
+        var achat = mobilisable / b.tauxDeductionSousTraitance;
+        el.mobilisable.textContent = fEuros(mobilisable);
+        el['opportunite-texte'].textContent = 'En confiant environ ' + fArrondi(achat) +
+          ' HT de main-d’œuvre à AlterEos, entreprise adaptée : numérisation, relation client, ' +
+          'éditique, e-logistique, industrie ou formation. Des prestations dont vous avez besoin, ' +
+          'au lieu d’un versement sans contrepartie.';
+        el['cta-titre'].textContent = 'Transformez ' + fEuros(mobilisable) + ' de contribution en prestations utiles';
+      } else if (r.contributionDue === 0) {
+        el['cta-titre'].textContent = 'Allez plus loin dans vos achats responsables';
+      } else {
+        el['cta-titre'].textContent = CTA_TITRE_DEFAUT;
       }
 
-      /* Curseur */
-      var afficherCurseur = base > 0 && !r.neutralisee;
-      el['curseur-bloc'].hidden = !afficherCurseur;
-      if (afficherCurseur && !etat.curseurActif) {
-        var plancher = Math.max(
-          20000,
-          Math.ceil((r.levier.achatsPourSaturerPlafond * 1.35) / 5000) * 5000,
-          Math.ceil((r.saisie.coutMainOeuvreSecteurAdapte * 1.5) / 5000) * 5000
-        );
-        el.curseur.max = plancher;
-        el.curseur.step = Math.max(500, Math.round(plancher / 200 / 500) * 500);
-        el.curseur.value = r.saisie.coutMainOeuvreSecteurAdapte;
-        majCurseur(r.saisie.coutMainOeuvreSecteurAdapte, r);
-      }
-
-      /* Détail et levier */
       rendreTableau(r);
-      rendreLevier(r);
-
-      el.cta.disabled = false;
       el['rappel-montant'].textContent = fEuros(r.contributionDue);
 
-      annoncer(r);
+      annoncer(r, mobilisable);
       etat.dernier = r;
+
+      if (!etat.resultatSuivi) {
+        etat.resultatSuivi = true;
+        suivre('aeds_resultat', {
+          aeds_contribution: Math.round(r.contributionDue),
+          aeds_mobilisable: Math.round(mobilisable),
+          aeds_effectif: r.saisie.effectifAssujettissement
+        });
+      }
     }
 
-    function annoncer(r) {
+    function annoncer(r, mobilisable) {
       var texte;
       if (r.objectifAtteint) {
         texte = 'Objectif de 6 % atteint, aucune contribution due.';
       } else {
-        texte = 'Contribution estimée : ' + fEuros(r.contributionDue) + '. ' +
-          'Contribution brute ' + fEuros(r.contributionBrute) + ', ' +
-          'déductions ' + fEuros(r.deductions.total) + '. ' +
-          (r.levier.margeDeduction > 0
-            ? fEuros(r.levier.margeDeduction) + ' sont encore transformables en prestation.'
-            : '');
+        texte = 'Contribution estimée : ' + fEuros(r.contributionDue) + ' par an. ' +
+          (mobilisable > 0 ? 'Jusqu’à ' + fEuros(mobilisable) + ' déductibles en confiant des prestations à AlterEos.' : '');
       }
       el.annonce.textContent = texte;
     }
@@ -702,68 +594,51 @@
       el.detail.hidden = false;
     }
 
-    function rendreLevier(r) {
-      var afficher = r.contributionBrute > 0 && !r.neutralisee && r.levier.margeDeduction > 0;
-      el.levier.hidden = !afficher;
-      if (!afficher) return;
-
-      el['levier-marge'].textContent = fEuros(r.levier.margeDeduction);
-      el['levier-achat'].textContent = fEuros(r.levier.achatsPourSaturerPlafond);
-      el['levier-embauche'].textContent = fEuros(r.levier.economieParEmbauche);
-
-      el['levier-marge-note'].textContent = r.levier.gainSiPlafondHaut > 0
-        ? 'Votre plafond est de 50 % car votre taux d’emploi direct est inférieur à 3 %. ' +
-          'Le franchir porterait le plafond à 75 %, soit ' + fEuros(r.levier.gainSiPlafondHaut) +
-          ' de déduction supplémentaire.'
-        : 'Votre taux d’emploi direct atteint 3 % : votre plafond de déduction est de 75 % ' +
-          'de la contribution brute.';
-    }
-
-    /* -------------------- Curseur ----------------------------------- */
-
-    function majCurseur(montant, reference) {
-      var r = reference || etat.dernier;
-      if (!r) return;
-      var simule = MOTEUR.simulerAchat(r.saisie, montant);
-      var progression = el.curseur.max > 0 ? (montant / el.curseur.max) * 100 : 0;
-      el.curseur.style.setProperty('--aeds-progression', progression + '%');
-      el['curseur-valeur'].textContent = fEuros(montant) + ' HT';
-      el.curseur.setAttribute('aria-valuetext',
-        fEuros(montant) + ' de prestation, soit une contribution de ' + fEuros(simule.contributionDue));
-
-      var gain = r.contributionDue - simule.contributionDue;
-      el['curseur-gain'].textContent = gain > 0
-        ? '− ' + fEuros(gain) + ' de contribution'
-        : 'Déplacez pour voir l’effet';
-      return simule;
-    }
-
     /* -------------------- Actions ----------------------------------- */
 
     var cibleFormulaire = racine.dataset.formulaireContact || '#contact';
     var cibleMessage = racine.dataset.champMessage || '';
+    var cibleEstUrl = /^(https?:)?\/|^\.{0,2}\//.test(cibleFormulaire);
 
     function resume(r) {
-      if (!r) return '';
-      return 'Simulation DOETH ' + r.bareme.annee + ' :\n' +
-        '- Effectif d’assujettissement : ' + fNombre(r.saisie.effectifAssujettissement) + ' salariés\n' +
-        '- Bénéficiaires décomptés : ' + fNombre(r.unitesBeneficiaires) + ' unités (' +
-          fPourcent(r.tauxEmploiPourcent) + ')\n' +
-        '- Contribution brute : ' + fEuros(r.contributionBrute) + '\n' +
-        '- Déductions appliquées : ' + fEuros(r.deductions.total) + '\n' +
-        '- Contribution estimée : ' + fEuros(r.contributionDue) + '\n' +
-        '- Déduction encore mobilisable : ' + fEuros(r.levier.margeDeduction) +
-          ' (soit ' + fEuros(r.levier.achatsPourSaturerPlafond) + ' de prestation à confier)\n\n' +
-        'Je souhaite être recontacté pour en discuter.';
+      if (!r || !r.saisie.effectifAssujettissement) {
+        return 'Je souhaite échanger sur ma contribution OETH et les prestations d’AlterEos.';
+      }
+      var mobilisable = r.bascule && !r.neutralisee ? r.bascule.part.mobilisable : 0;
+      return 'Simulation OETH ' + r.bareme.annee + ' :\n' +
+        '- Effectif : ' + fNombre(r.saisie.effectifAssujettissement) + ' salariés\n' +
+        '- Bénéficiaires : ' + fNombre(r.unitesBeneficiaires || 0) + ' unités (' +
+          fPourcent(r.tauxEmploiPourcent || 0) + ')\n' +
+        '- Contribution estimée : ' + fEuros(r.contributionDue || 0) + ' par an\n' +
+        (mobilisable > 0 ? '- Déductible via une prestation : jusqu’à ' + fEuros(mobilisable) + '\n' : '') +
+        '\nJe souhaite être rappelé pour vérifier ce calcul et étudier les prestations possibles.';
     }
 
-    function allerAuContact() {
-      var cible = cibleFormulaire ? document.querySelector(cibleFormulaire) : null;
+    function allerAuContact(e) {
+      var emplacement = e && e.currentTarget ? e.currentTarget.getAttribute('data-emplacement') : '';
+      var r = etat.dernier;
+      var texte = resume(r);
+
+      suivre('aeds_cta', {
+        aeds_emplacement: emplacement,
+        aeds_contribution: r && r.contributionDue ? Math.round(r.contributionDue) : 0
+      });
+
+      if (cibleEstUrl) {
+        var url = new URL(cibleFormulaire, window.location.href);
+        url.searchParams.set('simulation', texte);
+        window.location.href = url.toString();
+        return;
+      }
+
+      var cible = null;
+      try { cible = document.querySelector(cibleFormulaire); } catch (err) { cible = null; }
 
       if (cibleMessage) {
-        var zone = document.querySelector(cibleMessage);
+        var zone = null;
+        try { zone = document.querySelector(cibleMessage); } catch (err) { zone = null; }
         if (zone && 'value' in zone && !zone.value.trim()) {
-          zone.value = resume(etat.dernier);
+          zone.value = texte;
           zone.dispatchEvent(new Event('input', { bubbles: true }));
         }
       }
@@ -773,14 +648,14 @@
           behavior: mouvementReduit.matches ? 'auto' : 'smooth',
           block: 'start'
         });
-        var premier = cible.querySelector('input, select, textarea');
+        var premier = cible.querySelector('input:not([type="hidden"]), select, textarea');
         if (premier) {
           window.setTimeout(function () { premier.focus({ preventScroll: true }); }, 600);
         }
       } else {
         racine.dispatchEvent(new CustomEvent('aeds:contact', {
           bubbles: true,
-          detail: { resultat: etat.dernier, resume: resume(etat.dernier) }
+          detail: { resultat: r, resume: texte }
         }));
       }
     }
@@ -792,70 +667,37 @@
       valider(saisie);
 
       if (saisie.effectifAssujettissement <= 0) {
-        var vide = MOTEUR.calculer(saisie);
-        el['annee-aide'].textContent = 'Déclaration en ' + vide.bareme.declaration +
-          ' — ' + vide.bareme.smicSource + ' : ' + fEurosPrecis(vide.bareme.smicHoraire) + '.';
-        el['source-bareme'].textContent = 'année ' + vide.bareme.annee + ', ' +
-          vide.bareme.smicSource + ' (' + fEurosPrecis(vide.bareme.smicHoraire) + ').';
+        majBareme(MOTEUR.calculer(saisie).bareme);
         el.alertes.innerHTML = '';
-        videPanneau('Renseignez votre effectif pour lancer le calcul.');
+        videPanneau('Indiquez votre nombre de salariés.');
+        if (etat.animation) cancelAnimationFrame(etat.animation);
         etat.dernier = null;
         return;
       }
 
-      var r = MOTEUR.calculer(saisie);
-      rendre(r);
+      rendre(MOTEUR.calculer(saisie));
     }
 
     /* -------------------- Écouteurs --------------------------------- */
 
-    form.addEventListener('input', function (e) {
-      if (e.target === el.curseur) return;
-      etat.curseurActif = false;
-      recalculer();
-    });
-    form.addEventListener('change', function () {
-      etat.curseurActif = false;
-      recalculer();
-    });
-
-    el.curseur.addEventListener('input', function () {
-      etat.curseurActif = true;
-      var montant = parseFloat(el.curseur.value) || 0;
-      var simule = majCurseur(montant);
-      if (simule) {
-        afficherMontant(el.montant, etat.dernier.contributionDue, simule.contributionDue);
-        el['rappel-montant'].textContent = fEuros(simule.contributionDue);
-      }
-    });
-
-    el.curseur.addEventListener('change', function () {
-      // Le curseur reporte sa valeur dans le formulaire : une seule source de vérité.
-      champs.achats.value = el.curseur.value;
-      etat.curseurActif = true;
-      var conserve = el.curseur.value;
-      recalculer();
-      el.curseur.value = conserve;
-      majCurseur(parseFloat(conserve) || 0);
-      el.annonce.textContent = 'Achats au secteur adapté mis à jour : ' +
-        fEuros(parseFloat(conserve) || 0) + '. Contribution estimée : ' +
-        fEuros(etat.dernier ? etat.dernier.contributionDue : 0) + '.';
-    });
+    form.addEventListener('input', recalculer);
+    form.addEventListener('change', recalculer);
 
     el.cta.addEventListener('click', allerAuContact);
-    el['cta-bas'].addEventListener('click', allerAuContact);
     el['cta-mobile'].addEventListener('click', allerAuContact);
-    el.impression.addEventListener('click', function () { window.print(); });
 
-    /* Barre de rappel mobile : visible dès que le panneau sort de l'écran */
+    el.affiner.addEventListener('toggle', function () {
+      if (el.affiner.open) suivre('aeds_affiner', {});
+    });
+
+    /* Barre de rappel mobile : visible dès que l'appel à l'action sort de l'écran */
     if ('IntersectionObserver' in window) {
       var vigie = new IntersectionObserver(function (entrees) {
         var visible = entrees[0].isIntersecting;
         el.rappel.setAttribute('data-visible',
-          (!visible && etat.dernier && etat.dernier.contributionDue >= 0 && !el.cta.disabled)
-            ? 'true' : 'false');
+          (!visible && etat.dernier && etat.dernier.assujetti) ? 'true' : 'false');
       }, { rootMargin: '-80px 0px 0px 0px' });
-      vigie.observe(el['panneau-pied']);
+      vigie.observe(el['cta-bloc']);
     }
 
     recalculer();

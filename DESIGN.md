@@ -5,11 +5,13 @@ refonte. Ce document décrit le rendu réel, pas une intention.
 
 ## Le parti pris
 
-La contribution OETH n'est pas un montant à afficher, c'est une **masse à répartir**.
-L'écran de résultat refuse le compteur unique : il montre la contribution brute
-scindée en trois parts — ce qui reste dû, ce qui est encore transformable en
-prestation, ce qui est déjà déduit. Le curseur fait bouger cette répartition sous les
-yeux de l'utilisateur. C'est le mécanisme d'AlterEos, rendu littéral.
+Deux chiffres, un montant, une opportunité, une action. Le visiteur saisit son effectif
+et son nombre de salariés en situation de handicap ; il obtient aussitôt sa contribution
+annuelle, puis, sur fond vert, la part qu'une prestation confiée à AlterEos permet de
+déduire. Le panneau se clôt sur un appel à l'action unique : être rappelé par un expert.
+Tout le reste (année, seniors, achats déjà réalisés, ECAP, cas particuliers) est replié
+dans « Affiner mon estimation » et le détail du calcul dans un volet sous l'atelier.
+
 
 ## Couleur
 
@@ -65,33 +67,27 @@ fichier — toute règle de reset ajoutée doit suivre la même forme.
 
 - Deux colonnes à partir de `64rem` : saisie à gauche, résultat collant à droite.
   En dessous, une seule colonne et une barre de rappel fixe en bas d'écran qui
-  n'apparaît que lorsque le panneau sort du champ de vision.
-- Le formulaire est découpé en trois cartes — effectif, bénéficiaires, achats — plus
-  un volet repliable pour les situations particulières. Le mode simple suffit à
-  obtenir un résultat : rien d'obligatoire n'est caché dans le volet.
-- Le détail du calcul est un tableau pleine largeur sous l'atelier, chaque ligne
-  portant sa formule en sous-texte. Il est imprimable tel quel.
+  n'apparaît que lorsque le bloc d'action sort du champ de vision.
+- Saisie : une seule carte de deux champs agrandis, puis le volet facultatif.
+- Panneau : montant (gris clair) → opportunité (vert voile) → appel à l'action (blanc).
+  Le titre de l'appel reprend le montant déductible quand il existe.
+- Le détail du calcul est un volet replié pleine largeur, chaque ligne portant sa formule.
+
 
 ## Mouvement
 
-Un seul moment chorégraphié : **la scission de la masse**. Les trois parts de la barre
-transitionnent en largeur sur `560ms cubic-bezier(.22,.85,.2,1)` et le montant
-principal est interpolé sur `460ms` en ease-out cubique. Tout le reste se contente de
-`200ms` sur la couleur et la bordure.
+Le montant principal est interpolé sur `460ms` en ease-out cubique. Tout le reste se
+contente de `200ms` sur la couleur et la bordure. `prefers-reduced-motion` coupe
+l'interpolation et toutes les transitions.
 
-La barre porte `contain: layout paint` : les parts se poussent l'une l'autre, ce qu'un
-`scaleX` déformerait (les hachures s'étireraient), donc le recalcul est confiné.
-
-`prefers-reduced-motion` coupe l'interpolation du montant et toutes les transitions.
 
 ## Accessibilité — contraintes de conception
 
 Non négociable : le produit est vendu par une entreprise adaptée.
 
-- Trois parts distinguées par **motif** (plein, hachuré) autant que par couleur, et
-  chiffrées en toutes lettres dans la légende.
-- `role="img"` + `aria-label` chiffré sur la barre ; `role="status"` concis pour le
-  résultat, jamais bavard.
+- L'opportunité est portée par le texte (« Jusqu'à X € déductibles »), pas par la
+  seule couleur verte.
+- `role="status"` concis pour le résultat, jamais bavard.
 - Contrastes mesurés : minimum relevé 5,0:1 sur le texte secondaire.
 - Cibles ≥ 43 px sur tous les contrôles pointés.
 - Contour de focus orange 3px, décalé de 2px, jamais supprimé.
