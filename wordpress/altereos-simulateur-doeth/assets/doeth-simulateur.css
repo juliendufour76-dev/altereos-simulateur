@@ -102,7 +102,7 @@
  * ------------------------------------------------------------------ */
 
 .aeds__section {
-  padding: clamp(2rem, 1rem + 4vw, 4.5rem) clamp(1rem, 0.5rem + 2.5vw, 3rem);
+  padding: clamp(1.25rem, 0.75rem + 2vw, 2.5rem);
   background: var(--ae-bande);
   border-radius: var(--ae-rayon);
 }
@@ -113,18 +113,18 @@
 }
 
 .aeds__ouverture {
-  max-width: 60ch;
-  margin-bottom: clamp(1.75rem, 1rem + 2vw, 2.75rem);
+  max-width: 64ch;
+  margin-bottom: var(--ae-r5);
 }
 
 .aeds__titre {
-  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.1rem);
   text-wrap: balance;
 }
 
 .aeds__chapo {
-  margin-top: var(--ae-r4);
-  font-size: 1.0625rem;
+  margin-top: var(--ae-r2);
+  font-size: 1rem;
   color: var(--ae-gris);
   max-width: 64ch;
   text-wrap: pretty;
@@ -134,8 +134,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--ae-r2) var(--ae-r5);
-  margin-top: var(--ae-r5);
-  font-size: 0.875rem;
+  padding: 0 var(--ae-r2);
+  font-size: 0.8125rem;
   color: var(--ae-gris);
 }
 .aeds__meta li { display: flex; align-items: center; gap: 0.45rem; }
@@ -147,14 +147,24 @@
 
 .aeds__atelier {
   display: grid;
-  gap: var(--ae-r5);
+  gap: var(--ae-r4);
   align-items: start;
 }
 
-@media (min-width: 64rem) {
+/* Sur une colonne, le résultat suit directement la saisie ; le détail, les
+   garanties et les alertes passent dessous. */
+.aeds__colonne { display: contents; }
+.aeds__form { order: 1; }
+.aeds__resultat { order: 2; }
+.aeds__detail { order: 3; }
+.aeds__meta { order: 4; }
+.aeds__alertes { order: 5; }
+
+@media (min-width: 56rem) {
+  .aeds__colonne { display: grid; gap: var(--ae-r3); min-width: 0; }
   .aeds__atelier {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr);
-    gap: var(--ae-r6);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--ae-r5);
   }
   .aeds__resultat { position: sticky; top: var(--ae-r5); }
 }
@@ -163,14 +173,14 @@
  *  Formulaire
  * ------------------------------------------------------------------ */
 
-.aeds__form { display: grid; gap: var(--ae-r4); }
+.aeds__form { display: grid; gap: var(--ae-r3); }
 
 .aeds__bloc {
   border: 0;
   border-radius: var(--ae-rayon-md);
   background: var(--ae-blanc);
   box-shadow: var(--ae-ombre-douce);
-  padding: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  padding: clamp(1rem, 0.85rem + 0.6vw, 1.35rem);
   min-width: 0;
 }
 
@@ -179,9 +189,9 @@
   float: left; /* évite l'espacement natif de <legend> */
   width: 100%;
   padding: 0;
-  margin-bottom: var(--ae-r1);
+  margin-bottom: var(--ae-r3);
   font-family: var(--ae-titres);
-  font-size: 1.0625rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -198,8 +208,20 @@
 
 .aeds__champs { display: grid; gap: var(--ae-r4); clear: both; }
 
+/* En duo, libellé, aide, saisie et erreur partagent les mêmes lignes : les deux
+   champs restent alignés même quand un libellé passe sur deux lignes. */
 @media (min-width: 32rem) {
-  .aeds__champs--duo { grid-template-columns: 1fr 1fr; }
+  .aeds__champs--duo {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(4, auto);
+    column-gap: var(--ae-r4);
+    row-gap: 0;
+  }
+  .aeds__champs--duo > .aeds__champ {
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+  }
+  .aeds__champs--duo .aeds__saisie { margin-top: var(--ae-r1); }
 }
 
 .aeds__champ { display: grid; gap: var(--ae-r1); min-width: 0; align-content: start; }
@@ -241,7 +263,7 @@
   min-height: 2.75rem;
 }
 .aeds__saisie input:focus { outline: none; }
-.aeds__saisie--grand input { font-size: 1.25rem; min-height: 3.25rem; }
+.aeds__saisie--grand input { font-size: 1.125rem; min-height: 3rem; }
 
 .aeds__unite {
   flex: none;
@@ -343,12 +365,13 @@
   display: flex;
   align-items: center;
   gap: var(--ae-r3);
-  padding: var(--ae-r4) clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  padding: var(--ae-r3) clamp(1rem, 0.85rem + 0.6vw, 1.35rem);
   font-family: var(--ae-titres);
+  font-size: 0.9375rem;
   font-weight: 700;
   cursor: pointer;
   list-style: none;
-  min-height: 3.25rem;
+  min-height: 2.75rem;
 }
 .aeds__volet > summary::-webkit-details-marker { display: none; }
 .aeds__volet > summary:hover { background: var(--ae-papier); }
@@ -366,7 +389,7 @@
 }
 .aeds__volet[open] .aeds__volet-fleche { transform: rotate(180deg); }
 .aeds__volet-corps {
-  padding: var(--ae-r4) clamp(1.25rem, 1rem + 1vw, 1.75rem) clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  padding: var(--ae-r4) clamp(1rem, 0.85rem + 0.6vw, 1.35rem);
   display: grid;
   gap: var(--ae-r4);
   border-top: 1px solid var(--ae-trait);
@@ -384,7 +407,7 @@
 }
 
 .aeds__panneau-tete {
-  padding: clamp(1.25rem, 1rem + 1.2vw, 2rem);
+  padding: clamp(1rem, 0.85rem + 0.6vw, 1.5rem);
   background: linear-gradient(180deg, var(--ae-ardoise-voile), var(--ae-blanc));
   border-bottom: 1px solid var(--ae-trait);
 }
@@ -402,9 +425,9 @@
 
 .aeds__montant {
   display: block;
-  margin-top: var(--ae-r4);
+  margin-top: var(--ae-r2);
   font-family: var(--ae-titres);
-  font-size: clamp(2.5rem, 1.6rem + 3.4vw, 3.75rem);
+  font-size: clamp(2.25rem, 1.7rem + 1.6vw, 3rem);
   line-height: 0.98;
   font-weight: 700;
   letter-spacing: -0.04em;
@@ -414,8 +437,8 @@
 .aeds__montant--nul { color: var(--ae-vert-fonce); }
 
 .aeds__montant-note {
-  margin-top: var(--ae-r3);
-  font-size: 0.9375rem;
+  margin-top: var(--ae-r2);
+  font-size: 0.875rem;
   color: var(--ae-gris);
   max-width: 46ch;
 }
@@ -427,7 +450,7 @@
   display: grid;
   grid-template-columns: auto 1fr;
   gap: var(--ae-r3);
-  padding: clamp(1.25rem, 1rem + 1.2vw, 2rem);
+  padding: var(--ae-r4) clamp(1rem, 0.85rem + 0.6vw, 1.5rem);
   background: var(--ae-vert-voile);
   border-bottom: 1px solid var(--ae-vert-trait);
 }
@@ -435,30 +458,30 @@
 .aeds__opportunite-icone {
   display: grid;
   place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
   background: var(--ae-blanc);
   color: var(--ae-vert-fonce);
 }
 .aeds__opportunite-titre {
   font-family: var(--ae-titres);
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.3;
   letter-spacing: -0.01em;
 }
 .aeds__opportunite-titre strong {
-  display: block;
-  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem);
+  font-size: clamp(1.35rem, 1.1rem + 0.8vw, 1.65rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
   color: var(--ae-vert-fonce);
 }
 .aeds__opportunite-texte {
-  margin-top: var(--ae-r2);
-  font-size: 0.9375rem;
+  margin-top: var(--ae-r1);
+  font-size: 0.875rem;
+  line-height: 1.5;
   color: var(--ae-encre-douce);
   max-width: 52ch;
 }
@@ -466,18 +489,16 @@
 /* L'appel à l'action */
 
 .aeds__cta {
-  padding: clamp(1.25rem, 1rem + 1.2vw, 2rem);
+  padding: clamp(1rem, 0.85rem + 0.6vw, 1.5rem);
   display: grid;
-  gap: var(--ae-r3);
+  gap: var(--ae-r2);
 }
 .aeds__cta-titre {
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   text-wrap: balance;
 }
-.aeds__cta-liste { display: grid; gap: 0.35rem; font-size: 0.9375rem; color: var(--ae-encre-douce); }
-.aeds__cta-liste li { display: flex; gap: 0.5rem; align-items: baseline; }
-.aeds__cta-liste svg { flex: none; color: var(--ae-vert-fonce); transform: translateY(2px); }
-.aeds__cta .aeds__bouton { margin-top: var(--ae-r2); }
+.aeds__cta-texte { font-size: 0.875rem; color: var(--ae-encre-douce); line-height: 1.5; }
+.aeds__cta .aeds__bouton { margin-top: var(--ae-r1); }
 
 .aeds__bouton {
   display: inline-flex;
@@ -524,17 +545,19 @@
  *  Alertes
  * ------------------------------------------------------------------ */
 
-.aeds__alertes { display: grid; gap: var(--ae-r3); margin-top: var(--ae-r4); }
+.aeds__alertes { display: grid; gap: var(--ae-r2); }
+.aeds__alertes:empty { display: none; }
 
 .aeds__alerte {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: var(--ae-r3);
-  padding: var(--ae-r4);
+  gap: var(--ae-r2);
+  padding: var(--ae-r3);
   border: 1px solid var(--ae-trait);
   border-radius: var(--ae-rayon-sm);
   background: var(--ae-blanc);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
 .aeds__alerte svg { flex: none; margin-top: 0.15rem; }
 .aeds__alerte b { display: block; margin-bottom: 0.15rem; }
@@ -547,7 +570,6 @@
  *  Détail du calcul
  * ------------------------------------------------------------------ */
 
-.aeds__detail { margin-top: clamp(1.5rem, 1rem + 2vw, 2.5rem); }
 .aeds__detail[hidden] { display: none; }
 
 .aeds__enveloppe-tableau {
@@ -558,13 +580,13 @@
 
 .aeds__tableau {
   width: 100%;
-  min-width: 30rem;
+  min-width: 26rem;
   border-collapse: collapse;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
 }
 .aeds__tableau caption {
   text-align: left;
-  padding: var(--ae-r3) var(--ae-r5);
+  padding: var(--ae-r2) var(--ae-r4);
   font-size: 0.8125rem;
   color: var(--ae-gris);
   background: var(--ae-papier);
@@ -572,7 +594,7 @@
 }
 .aeds__tableau th,
 .aeds__tableau td {
-  padding: 0.75rem var(--ae-r5);
+  padding: 0.6rem var(--ae-r4);
   text-align: left;
   border-bottom: 1px solid var(--ae-trait);
   vertical-align: top;
@@ -611,10 +633,11 @@
 .aeds__ligne--totale .aeds__formule { color: #b9c6cd; }
 
 .aeds__mention {
-  margin-top: clamp(2rem, 1.5rem + 2vw, 3rem);
-  padding-top: var(--ae-r4);
+  margin-top: var(--ae-r5);
+  padding-top: var(--ae-r3);
   border-top: 1px solid var(--ae-trait-fort);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
   color: var(--ae-gris);
 }
 .aeds__mention a { color: var(--ae-orange-fonce); }
@@ -638,7 +661,7 @@
   padding-bottom: calc(var(--ae-r3) + env(safe-area-inset-bottom, 0px));
 }
 .aeds__rappel[data-visible="true"] { display: flex; }
-@media (min-width: 64rem) { .aeds__rappel { display: none !important; } }
+@media (min-width: 56rem) { .aeds__rappel { display: none !important; } }
 .aeds__rappel small { display: block; font-size: 0.75rem; color: var(--ae-gris); }
 .aeds__rappel data {
   font-family: var(--ae-titres);

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       AlterEos — Simulateur DOETH
  * Description:       Simulateur de contribution OETH / DOETH avec estimation de la déduction liée à la sous-traitance au secteur adapté. Shortcode [altereos_doeth] ou bloc « Shortcode ».
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            AlterEos
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ALTEREOS_DOETH_VERSION', '1.1.0' );
+define( 'ALTEREOS_DOETH_VERSION', '1.2.0' );
 define( 'ALTEREOS_DOETH_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ALTEREOS_DOETH_URL', plugin_dir_url( __FILE__ ) );
 
@@ -64,6 +64,8 @@ add_action( 'init', 'altereos_doeth_register_assets' );
  *              distincte : le résumé y est transmis dans ?simulation=.
  *   message    Sélecteur CSS du champ de message à pré-remplir avec le
  *              résumé de la simulation. Laisser vide pour ne rien remplir.
+ *   entete     « non » masque le titre intégré, quand la section porte déjà
+ *              son propre titre. Défaut : oui.
  *   classe     Classes supplémentaires sur le conteneur.
  *
  * Exemple : [altereos_doeth annee="2026" contact="#formulaire-contact"
@@ -75,6 +77,7 @@ function altereos_doeth_shortcode( $atts ) {
 			'annee'   => '2026',
 			'contact' => '#contact',
 			'message' => '',
+			'entete'  => 'oui',
 			'classe'  => '',
 		),
 		$atts,
@@ -90,6 +93,7 @@ function altereos_doeth_shortcode( $atts ) {
 		'data-annee'               => preg_replace( '/\D/', '', $atts['annee'] ),
 		'data-formulaire-contact'  => $atts['contact'],
 		'data-champ-message'       => $atts['message'],
+		'data-entete'              => 'non' === strtolower( $atts['entete'] ) ? 'non' : '',
 	);
 
 	$rendu = '';

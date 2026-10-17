@@ -36,7 +36,7 @@ Puis compressez `wordpress/altereos-simulateur-doeth/` et installez l'archive vi
 Dans la page « Calculateur OETH », à l'endroit où mène le bouton « Lancer la simulation » :
 
 ```
-[altereos_doeth annee="2026" contact="#contact" message="#form-field-message"]
+[altereos_doeth entete="non" contact=".elementor-form" message="#form-field-message"]
 ```
 
 | Attribut | Défaut | Rôle |
@@ -44,6 +44,7 @@ Dans la page « Calculateur OETH », à l'endroit où mène le bouton « Lancer 
 | `annee` | `2026` | Année de référence présélectionnée. |
 | `contact` | `#contact` | Sélecteur CSS du bloc de contact vers lequel renvoient les boutons d'action, **ou URL d'une page contact** (`/contact/`) : le résumé y est passé dans le paramètre `?simulation=`, récupérable par la balise dynamique « Paramètre de requête » d'Elementor Pro. |
 | `message` | *(vide)* | Sélecteur CSS du champ « Décrivez votre besoin » à pré-remplir avec le résumé chiffré de la simulation. |
+| `entete` | `oui` | `non` masque le titre intégré : à utiliser quand la section Elementor porte déjà son surtitre et son H2. |
 | `classe` | *(vide)* | Classes CSS additionnelles. |
 
 Le bouton « Lancer la simulation » de la maquette doit pointer vers l'ancre de la

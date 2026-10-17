@@ -11,6 +11,8 @@
  * data-formulaire-contact accepte un sélecteur CSS (bloc de la même page) ou
  * une URL (page contact distincte, le résumé est passé dans ?simulation=).
  *
+ * data-entete="non" masque le titre intégré, quand la section du site porte déjà le sien.
+ *
  * Le module s'initialise seul sur tous les [data-aeds] présents au chargement.
  */
 (function (window, document) {
@@ -37,7 +39,7 @@
   function fEuros(n) { return euros.format(Math.round(n || 0)); }
   function fEurosPrecis(n) { return eurosPrecis.format(n || 0); }
   function fNombre(n) { return decimal.format(n || 0); }
-  function fPourcent(n) { return decimal.format(n || 0).replace(/\s/g, ' ') + ' %'; }
+  function fPourcent(n) { return decimal.format(n || 0) + ' %'; }
 
   // Arrondi commercial pour un ordre de grandeur lisible : 41 237 € → 41 000 €.
   function fArrondi(n) {
@@ -62,7 +64,6 @@
     attention: icone('<path d="M10.3 4.3 2.6 17.5A1.9 1.9 0 0 0 4.3 20.4h15.4a1.9 1.9 0 0 0 1.7-2.9L13.7 4.3a1.9 1.9 0 0 0-3.4 0Z"/><path d="M12 10v4"/><path d="M12 17h.01"/>'),
     fleche: icone('<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>'),
     chevron: icone('<path d="m6 9 6 6 6-6"/>', 20),
-    coche: icone('<path d="m5 12 5 5 9-10"/>', 16),
     feuille: icone('<path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14"/><path d="M5 19 13 11"/>', 22)
   };
 
@@ -99,7 +100,7 @@
       '</label>';
   }
 
-  function gabarit(prefixe, annees, anneeActive) {
+  function gabarit(prefixe, annees, anneeActive, avecEntete) {
     var segments = annees.map(function (a) {
       return '<span class="aeds__segment">' +
         '<input type="radio" name="' + prefixe + '-annee" id="' + prefixe + '-annee-' + a + '" ' +
@@ -108,32 +109,33 @@
     }).join('');
 
     return '' +
-    '<section class="aeds__section" aria-labelledby="' + prefixe + '-titre">' +
+    '<section class="aeds__section" ' + (avecEntete
+      ? 'aria-labelledby="' + prefixe + '-titre"'
+      : 'aria-label="Simulateur de contribution OETH"') + '>' +
     '<div class="aeds__contenu">' +
 
-      '<header class="aeds__ouverture">' +
-        '<h2 class="aeds__titre" id="' + prefixe + '-titre">Votre contribution OETH peut travailler pour vous</h2>' +
-        '<p class="aeds__chapo">Deux chiffres suffisent pour estimer ce que vous versez chaque année, ' +
-          'et la part que vous pouvez transformer en prestations utiles confiées à AlterEos.</p>' +
-        '<ul class="aeds__meta">' +
-          '<li>' + ICONES.horloge + 'Résultat en 30 secondes, sans inscription</li>' +
-          '<li>' + ICONES.bouclier + 'Barème officiel Urssaf / Agefiph</li>' +
-        '</ul>' +
-      '</header>' +
+      (avecEntete
+        ? '<header class="aeds__ouverture">' +
+            '<h2 class="aeds__titre" id="' + prefixe + '-titre">Votre contribution OETH peut travailler pour vous</h2>' +
+            '<p class="aeds__chapo">Deux chiffres suffisent pour estimer ce que vous versez chaque année, ' +
+              'et la part que vous pouvez transformer en prestations utiles confiées à AlterEos.</p>' +
+          '</header>'
+        : '') +
 
       '<div class="aeds__atelier">' +
 
         /* ---------- Colonne saisie ---------- */
+        '<div class="aeds__colonne">' +
         '<form class="aeds__form" novalidate data-role="form">' +
 
           '<fieldset class="aeds__bloc">' +
             '<legend class="aeds__legende">Votre entreprise</legend>' +
-            '<div class="aeds__champs">' +
+            '<div class="aeds__champs aeds__champs--duo">' +
               champNombre(prefixe + '-effectif', 'Nombre de salariés',
-                'Effectif moyen annuel, tel que notifié par l’Urssaf ou la MSA.',
+                'Effectif moyen annuel notifié par l’Urssaf.',
                 { unite: 'salariés', placeholder: 'ex. 150', decimal: true, step: 0.01, grand: true }) +
-              champNombre(prefixe + '-boeth', 'Dont salariés en situation de handicap',
-                'Reconnus travailleurs handicapés (RQTH, invalidité, AAH…). Laissez vide si aucun.',
+              champNombre(prefixe + '-boeth', 'Dont en situation de handicap',
+                'RQTH, invalidité, AAH… Vide si aucun.',
                 { unite: 'pers.', placeholder: 'ex. 3', decimal: true, step: 0.01, grand: true }) +
             '</div>' +
           '</fieldset>' +
@@ -185,6 +187,26 @@
 
         '</form>' +
 
+        /* Détail du calcul, replié sous la saisie */
+        '<details class="aeds__volet aeds__detail" data-role="detail" hidden>' +
+          '<summary>Voir le détail du calcul <small>formule par formule</small>' +
+            '<span class="aeds__volet-fleche">' + ICONES.chevron + '</span></summary>' +
+          '<div class="aeds__enveloppe-tableau">' +
+            '<table class="aeds__tableau">' +
+              '<caption data-role="legende-tableau"></caption>' +
+              '<thead><tr><th scope="col">Étape</th><th scope="col">Montant</th></tr></thead>' +
+              '<tbody data-role="corps-tableau"></tbody>' +
+            '</table>' +
+          '</div>' +
+        '</details>' +
+
+        '<ul class="aeds__meta">' +
+          '<li>' + ICONES.horloge + 'Résultat immédiat, sans inscription</li>' +
+          '<li>' + ICONES.bouclier + 'Barème officiel Urssaf / Agefiph</li>' +
+        '</ul>' +
+        '<div class="aeds__alertes" data-role="alertes"></div>' +
+        '</div>' +
+
         /* ---------- Colonne résultat ---------- */
         '<div class="aeds__resultat">' +
           '<div class="aeds__panneau">' +
@@ -207,11 +229,8 @@
 
             '<div class="aeds__cta" data-role="cta-bloc">' +
               '<h4 class="aeds__cta-titre" data-role="cta-titre">Allez plus loin avec un expert AlterEos</h4>' +
-              '<ul class="aeds__cta-liste">' +
-                '<li>' + ICONES.coche + 'Vérification de votre calcul avec vos chiffres réels</li>' +
-                '<li>' + ICONES.coche + 'Prestations déductibles adaptées à vos besoins</li>' +
-                '<li>' + ICONES.coche + 'Un plan pour réduire durablement votre contribution</li>' +
-              '</ul>' +
+              '<p class="aeds__cta-texte">Un expert vérifie votre calcul avec vos chiffres réels ' +
+                'et identifie les prestations déductibles adaptées à vos besoins.</p>' +
               '<button type="button" class="aeds__bouton aeds__bouton--principal" data-role="cta" data-emplacement="panneau">' +
                 'Être rappelé par un expert' + ICONES.fleche + '</button>' +
               '<p class="aeds__pied-note">Échange de 30 minutes, gratuit et sans engagement.</p>' +
@@ -219,23 +238,9 @@
 
           '</div>' +
 
-          '<div class="aeds__alertes" data-role="alertes"></div>' +
         '</div>' +
 
       '</div>' +
-
-      /* ---------- Détail, replié ---------- */
-      '<details class="aeds__volet aeds__detail" data-role="detail" hidden>' +
-        '<summary>Voir le détail du calcul <small>formule par formule</small>' +
-          '<span class="aeds__volet-fleche">' + ICONES.chevron + '</span></summary>' +
-        '<div class="aeds__enveloppe-tableau">' +
-          '<table class="aeds__tableau">' +
-            '<caption data-role="legende-tableau"></caption>' +
-            '<thead><tr><th scope="col">Étape</th><th scope="col">Montant</th></tr></thead>' +
-            '<tbody data-role="corps-tableau"></tbody>' +
-          '</table>' +
-        '</div>' +
-      '</details>' +
 
       '<footer class="aeds__mention">' +
         '<p><b>Estimation indicative.</b> Ce simulateur ne remplace pas la déclaration en DSN ni ' +
@@ -284,7 +289,7 @@
     if (annees.indexOf(anneeDefaut) === -1) anneeDefaut = MOTEUR.ANNEE_PAR_DEFAUT;
 
     racine.classList.add('aeds');
-    racine.innerHTML = gabarit(prefixe, annees, anneeDefaut);
+    racine.innerHTML = gabarit(prefixe, annees, anneeDefaut, racine.dataset.entete !== 'non');
 
     var el = {};
     Array.prototype.forEach.call(racine.querySelectorAll('[data-role]'), function (n) {
@@ -396,14 +401,22 @@
 
     function afficherMontant(noeud, depart, arrivee) {
       if (etat.animation) cancelAnimationFrame(etat.animation);
+      window.clearTimeout(etat.finAnimation);
       if (mouvementReduit.matches || Math.abs(arrivee - depart) < 1) {
         noeud.textContent = fEuros(arrivee);
         return;
       }
       var debut = performance.now();
       var duree = 460;
+      // Filet de sécurité : si les images d'animation sont suspendues (onglet en
+      // arrière-plan, économie d'énergie), le montant final s'affiche quand même.
+      etat.finAnimation = window.setTimeout(function () {
+        if (etat.animation) cancelAnimationFrame(etat.animation);
+        noeud.textContent = fEuros(arrivee);
+      }, duree + 80);
       (function pas(maintenant) {
-        var t = Math.min(1, (maintenant - debut) / duree);
+        // Le premier horodatage de requestAnimationFrame peut précéder performance.now().
+        var t = Math.max(0, Math.min(1, (maintenant - debut) / duree));
         var e = 1 - Math.pow(1 - t, 3);
         noeud.textContent = fEuros(depart + (arrivee - depart) * e);
         if (t < 1) etat.animation = requestAnimationFrame(pas);
@@ -475,8 +488,7 @@
         el.mobilisable.textContent = fEuros(mobilisable);
         el['opportunite-texte'].textContent = 'En confiant environ ' + fArrondi(achat) +
           ' HT de main-d’œuvre à AlterEos, entreprise adaptée : numérisation, relation client, ' +
-          'éditique, e-logistique, industrie ou formation. Des prestations dont vous avez besoin, ' +
-          'au lieu d’un versement sans contrepartie.';
+          'éditique, e-logistique, industrie ou formation.';
         el['cta-titre'].textContent = 'Transformez ' + fEuros(mobilisable) + ' de contribution en prestations utiles';
       } else if (r.contributionDue === 0) {
         el['cta-titre'].textContent = 'Allez plus loin dans vos achats responsables';
@@ -671,6 +683,7 @@
         el.alertes.innerHTML = '';
         videPanneau('Indiquez votre nombre de salariés.');
         if (etat.animation) cancelAnimationFrame(etat.animation);
+        window.clearTimeout(etat.finAnimation);
         etat.dernier = null;
         return;
       }

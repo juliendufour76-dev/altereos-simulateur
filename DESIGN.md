@@ -65,13 +65,16 @@ fichier — toute règle de reset ajoutée doit suivre la même forme.
 
 ## Composition
 
-- Deux colonnes à partir de `64rem` : saisie à gauche, résultat collant à droite.
+- Conçu pour tenir dans une section de page (≈ 680 px de haut à 1440 px de large).
+- Deux colonnes à partir de `56rem` : saisie à gauche, résultat collant à droite.
   En dessous, une seule colonne et une barre de rappel fixe en bas d'écran qui
   n'apparaît que lorsque le bloc d'action sort du champ de vision.
-- Saisie : une seule carte de deux champs agrandis, puis le volet facultatif.
+- Colonne gauche : une carte de deux champs côte à côte (alignés par subgrid), le
+  volet facultatif, le détail du calcul replié, les garanties et les alertes.
+- Sur une colonne, `display: contents` + `order` remontent le résultat juste sous la
+  saisie ; détail, garanties et alertes passent dessous.
 - Panneau : montant (gris clair) → opportunité (vert voile) → appel à l'action (blanc).
   Le titre de l'appel reprend le montant déductible quand il existe.
-- Le détail du calcul est un volet replié pleine largeur, chaque ligne portant sa formule.
 
 
 ## Mouvement
