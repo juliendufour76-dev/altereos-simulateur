@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       AlterEos — Simulateur DOETH
  * Description:       Simulateur de contribution OETH / DOETH avec estimation de la déduction liée à la sous-traitance au secteur adapté. Shortcode [altereos_doeth] ou bloc « Shortcode ».
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            AlterEos
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ALTEREOS_DOETH_VERSION', '1.0.0' );
+define( 'ALTEREOS_DOETH_VERSION', '1.1.0' );
 define( 'ALTEREOS_DOETH_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ALTEREOS_DOETH_URL', plugin_dir_url( __FILE__ ) );
 
@@ -60,7 +60,8 @@ add_action( 'init', 'altereos_doeth_register_assets' );
  * Attributs :
  *   annee      Année de référence présélectionnée (2025 ou 2026).
  *   contact    Sélecteur CSS du bloc de contact vers lequel renvoie l'appel
- *              à l'action. Défaut : #contact.
+ *              à l'action (défaut : #contact), ou URL d'une page contact
+ *              distincte : le résumé y est transmis dans ?simulation=.
  *   message    Sélecteur CSS du champ de message à pré-remplir avec le
  *              résumé de la simulation. Laisser vide pour ne rien remplir.
  *   classe     Classes supplémentaires sur le conteneur.
