@@ -58,6 +58,7 @@
   var ICONES = {
     horloge: icone('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
     bouclier: icone('<path d="M12 3l7 3v6c0 4-3 6.5-7 9-4-2.5-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/>'),
+    cadenas: icone('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
     info: icone('<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>'),
     attention: icone('<path d="M10.3 4.3 2.6 17.5A1.9 1.9 0 0 0 4.3 20.4h15.4a1.9 1.9 0 0 0 1.7-2.9L13.7 4.3a1.9 1.9 0 0 0-3.4 0Z"/><path d="M12 10v4"/><path d="M12 17h.01"/>'),
     fleche: icone('<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>'),
@@ -116,8 +117,12 @@
         '<p class="aeds__chapo">Deux chiffres suffisent pour estimer ce que vous versez chaque année, ' +
           'et la part que vous pouvez transformer en prestations utiles confiées à AlterEos.</p>' +
         '<ul class="aeds__meta">' +
-          '<li>' + ICONES.horloge + 'Résultat en 30 secondes, sans inscription</li>' +
-          '<li>' + ICONES.bouclier + 'Barème officiel Urssaf / Agefiph</li>' +
+          '<li><span class="aeds__meta-icone">' + ICONES.horloge + '</span>' +
+            '<span><b>Résultat en 30 secondes</b><small>Sans inscription ni e-mail</small></span></li>' +
+          '<li><span class="aeds__meta-icone">' + ICONES.bouclier + '</span>' +
+            '<span><b>Barème officiel</b><small>Urssaf / Agefiph en vigueur</small></span></li>' +
+          '<li><span class="aeds__meta-icone">' + ICONES.cadenas + '</span>' +
+            '<span><b>Données privées</b><small>Le calcul reste dans votre navigateur</small></span></li>' +
         '</ul>' +
       '</header>' +
 
